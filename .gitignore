@@ -1,0 +1,22 @@
+# Dependências
+node_modules
+dist
+dist-ssr
+
+# Variáveis de ambiente — NUNCA versionar as chaves
+.env
+.env.local
+.env.*.local
+
+# Logs e editores
+*.log
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea
+
+# Config local da ferramenta (caminho de Node específico desta máquina)
+.claude/
+
+# Dados financeiros (já estão no Supabase) — não publicar no repositório
+data/
