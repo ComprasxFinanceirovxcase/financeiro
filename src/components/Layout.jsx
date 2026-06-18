@@ -66,6 +66,11 @@ export default function Layout({ children }) {
             Fundo de Caixa
           </NavLink>
           {ehAdmin && (
+            <NavLink to="/historico" className={abaClasse}>
+              Histórico
+            </NavLink>
+          )}
+          {ehAdmin && (
             <NavLink to="/usuarios" className={abaClasse}>
               Gerenciar usuários
             </NavLink>

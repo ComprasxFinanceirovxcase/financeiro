@@ -5,6 +5,7 @@ import Layout from './components/Layout.jsx'
 import Painel from './pages/Painel.jsx'
 import Solicitacoes from './pages/Solicitacoes.jsx'
 import FundoCaixa from './pages/FundoCaixa.jsx'
+import Historico from './pages/Historico.jsx'
 import Usuarios from './pages/Usuarios.jsx'
 
 function TelaCarregando() {
@@ -33,6 +34,10 @@ export default function App() {
         <Route path="/visao-geral" element={<Painel />} />
         <Route path="/solicitacoes" element={<Solicitacoes />} />
         <Route path="/fundo-caixa" element={<FundoCaixa />} />
+        <Route
+          path="/historico"
+          element={ehAdmin ? <Historico /> : <Navigate to="/visao-geral" replace />}
+        />
         <Route
           path="/usuarios"
           element={ehAdmin ? <Usuarios /> : <Navigate to="/solicitacoes" replace />}
