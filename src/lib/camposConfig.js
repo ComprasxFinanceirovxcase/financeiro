@@ -12,7 +12,6 @@ export const COLUNAS_SOLICITACOES = [
 
 export const CAMPOS_SOLICITACOES = [
   { nome: 'data', rotulo: 'Data', tipo: 'date', obrigatorio: true },
-  { nome: 'id_card', rotulo: 'ID do card' },
   { nome: 'produto', rotulo: 'Produto', obrigatorio: true, largura: 'full' },
   { nome: 'quantidade', rotulo: 'Quantidade', tipo: 'number' },
   { nome: 'valor_total', rotulo: 'Valor total (R$)', tipo: 'number', obrigatorio: true },
