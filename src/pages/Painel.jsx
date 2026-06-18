@@ -47,11 +47,18 @@ function Cartao({ titulo, valor, detalhe, cor, anel }) {
   )
 }
 
+const ABAS = [
+  { chave: 'pendente', rotulo: 'Pendentes', ativo: 'bg-amber-500 text-white' },
+  { chave: 'enviado', rotulo: 'Enviado p/ pagamento', ativo: 'bg-blue-600 text-white' },
+  { chave: 'pago', rotulo: 'Pagos', ativo: 'bg-emerald-600 text-white' },
+]
+
 export default function Painel() {
   const sol = useRealtimeTable('solicitacoes')
   const fun = useRealtimeTable('fundo_caixa')
   const { podeEditar } = useAuth()
 
+  const [aba, setAba] = useState('pendente')
   const [emEdicao, setEmEdicao] = useState(null)
   const [modalAberto, setModalAberto] = useState(false)
 
@@ -68,7 +75,6 @@ export default function Painel() {
     return mapa
   }, [sol.registros])
 
-  // Totais combinados (as duas telas)
   const comb = useMemo(() => {
     const soma = (a, b) => ({ qtd: a.qtd + b.qtd, total: a.total + b.total })
     return {
@@ -79,17 +85,18 @@ export default function Painel() {
     }
   }, [rSol, rFun])
 
-  // Pendentes das Solicitações (o que precisa ser pago)
-  const pendentes = useMemo(
-    () => sol.registros.filter((r) => grupoStatus(r.status) === 'pendente'),
-    [sol.registros],
-  )
+  // Pedidos (Solicitações) agrupados por status
+  const porStatus = useMemo(() => {
+    const g = { pendente: [], enviado: [], pago: [] }
+    for (const r of sol.registros) g[grupoStatus(r.status)].push(r)
+    return g
+  }, [sol.registros])
 
-  // Quanto o financeiro já definiu (responsável + forma) x falta definir
+  // Definição financeira (entre os pendentes)
   const definicao = useMemo(() => {
     const def = { qtd: 0, total: 0 }
     const falta = { qtd: 0, total: 0 }
-    for (const r of pendentes) {
+    for (const r of porStatus.pendente) {
       const v = Number(r.valor_total) || 0
       if (prontoParaPagar(r)) {
         def.qtd += 1
@@ -100,17 +107,23 @@ export default function Painel() {
       }
     }
     return { def, falta }
-  }, [pendentes])
+  }, [porStatus])
 
-  // Lista ordenada: primeiro os que faltam definir, depois por vencimento
-  const atencao = useMemo(() => {
-    return [...pendentes].sort((a, b) => {
-      const pa = prontoParaPagar(a) ? 1 : 0
-      const pb = prontoParaPagar(b) ? 1 : 0
-      if (pa !== pb) return pa - pb // "falta definir" primeiro
-      return (a.data_vencimento || a.data || '').localeCompare(b.data_vencimento || b.data || '')
-    })
-  }, [pendentes])
+  // Lista da aba selecionada (pendentes: "falta definir" primeiro)
+  const lista = useMemo(() => {
+    const arr = [...porStatus[aba]]
+    if (aba === 'pendente') {
+      arr.sort((a, b) => {
+        const pa = prontoParaPagar(a) ? 1 : 0
+        const pb = prontoParaPagar(b) ? 1 : 0
+        if (pa !== pb) return pa - pb
+        return (a.data_vencimento || a.data || '').localeCompare(b.data_vencimento || b.data || '')
+      })
+    } else {
+      arr.sort((a, b) => (b.data || '').localeCompare(a.data || ''))
+    }
+    return arr
+  }, [porStatus, aba])
 
   function abrirDefinicao(registro) {
     if (!podeEditar) return
@@ -189,97 +202,58 @@ export default function Painel() {
         </div>
       </div>
 
-      {/* Quebra por tela */}
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <table className="min-w-full divide-y divide-slate-200 text-sm">
-          <thead className="bg-slate-50">
-            <tr>
-              <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Tela
-              </th>
-              <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-amber-600">
-                Pendente
-              </th>
-              <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-blue-600">
-                Enviado
-              </th>
-              <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-emerald-600">
-                Pago
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            <LinhaQuebra nome="Solicitações" para="/solicitacoes" r={rSol} />
-            <LinhaQuebra nome="Fundo de Caixa" para="/fundo-caixa" r={rFun} />
-          </tbody>
-        </table>
-      </div>
-
-      {/* Precisa de atenção — clicável para definir o pagamento */}
+      {/* Pedidos separados por status (abas) */}
       <div>
-        <div className="mb-2 flex items-center justify-between">
-          <h3 className="text-base font-bold text-slate-800">
-            Precisa de atenção{' '}
-            <span className="text-sm font-normal text-slate-400">({atencao.length})</span>
-          </h3>
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="text-base font-bold text-slate-800">Pedidos (Solicitações)</h3>
           <Link to="/solicitacoes" className="text-sm font-semibold text-marca-700 hover:underline">
-            Ver Solicitações →
+            Abrir tela completa →
           </Link>
         </div>
 
-        {podeEditar && (
+        {/* Abas de status */}
+        <div className="mb-3 flex flex-wrap gap-2">
+          {ABAS.map((a) => {
+            const qtd = porStatus[a.chave].length
+            const ativo = aba === a.chave
+            return (
+              <button
+                key={a.chave}
+                type="button"
+                onClick={() => setAba(a.chave)}
+                className={[
+                  'rounded-full px-4 py-2 text-sm font-semibold transition active:scale-95',
+                  ativo ? a.ativo + ' shadow-sm' : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50',
+                ].join(' ')}
+              >
+                {a.rotulo} <span className={ativo ? 'opacity-90' : 'text-slate-400'}>({qtd})</span>
+              </button>
+            )
+          })}
+        </div>
+
+        {podeEditar && aba === 'pendente' && (
           <p className="mb-2 text-xs text-slate-500">
-            👉 Toque em um pedido para definir <strong>como vai ser pago</strong>, por qual{' '}
-            <strong>pessoa/PF</strong> e qual <strong>CNPJ/CPF</strong>, e marcar o status.
+            👉 Toque em um pedido para definir <strong>como vai ser pago</strong>, a{' '}
+            <strong>pessoa/PF</strong> e o <strong>CNPJ/CPF</strong>, e mudar o status.
           </p>
         )}
 
-        {atencao.length === 0 ? (
-          <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
-            🎉 Nada pendente — tudo está enviado ou pago!
+        {lista.length === 0 ? (
+          <div className="rounded-xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-400">
+            Nenhum pedido nesta situação.
           </div>
         ) : (
-          <div className="max-h-[28rem] space-y-2 overflow-y-auto scroll-suave pr-1">
-            {atencao.map((r) => {
-              const pronto = prontoParaPagar(r)
-              const linha = situacaoVencimento(r.status, r.data_vencimento).classeLinha
-              const Tag = podeEditar ? 'button' : 'div'
-              return (
-                <Tag
-                  key={r.id}
-                  onClick={() => abrirDefinicao(r)}
-                  className={[
-                    'flex w-full items-center justify-between gap-3 rounded-lg border bg-white px-4 py-3 text-left shadow-sm',
-                    linha || 'border-slate-200',
-                    podeEditar ? 'transition hover:border-marca-300 hover:shadow active:scale-[0.99]' : '',
-                  ].join(' ')}
-                >
-                  <div className="min-w-0">
-                    <p className="truncate font-semibold text-slate-800">{r.produto || '—'}</p>
-                    <p className="truncate text-xs text-slate-500">
-                      {r.fornecedor || 'sem fornecedor'} ·{' '}
-                      {r.empresa || <span className="text-amber-600">definir responsável</span>}
-                      {r.forma_pagamento ? ` · ${r.forma_pagamento}` : ''}
-                      {r.data_vencimento ? ` · vence ${formatarData(r.data_vencimento)}` : ''}
-                    </p>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-2">
-                    <span className="whitespace-nowrap text-sm font-bold tabular-nums text-slate-700">
-                      {formatarMoeda(r.valor_total)}
-                    </span>
-                    {pronto ? (
-                      <span className="whitespace-nowrap rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
-                        ✓ definido
-                      </span>
-                    ) : (
-                      <span className="whitespace-nowrap rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700 ring-1 ring-amber-200">
-                        definir
-                      </span>
-                    )}
-                  </div>
-                </Tag>
-              )
-            })}
+          <div className="max-h-[34rem] space-y-2 overflow-y-auto scroll-suave pr-1">
+            {lista.map((r) => (
+              <PedidoItem
+                key={r.id}
+                r={r}
+                aba={aba}
+                podeEditar={podeEditar}
+                onClick={() => abrirDefinicao(r)}
+              />
+            ))}
           </div>
         )}
       </div>
@@ -299,23 +273,74 @@ export default function Painel() {
   )
 }
 
-function LinhaQuebra({ nome, para, r }) {
-  const cel = (v) => (
-    <td className="px-4 py-2.5 text-right tabular-nums">
-      <div className="font-semibold text-slate-800">{formatarMoeda(v.total)}</div>
-      <div className="text-xs text-slate-400">{v.qtd}</div>
-    </td>
-  )
+/** Item de pedido com fornecedor, valor e PF/CNPJ bem visíveis. */
+function PedidoItem({ r, aba, podeEditar, onClick }) {
+  const linha = situacaoVencimento(r.status, r.data_vencimento).classeLinha
+  const pronto = prontoParaPagar(r)
+  const Tag = podeEditar ? 'button' : 'div'
+
+  function Campo({ rotulo, children, alerta }) {
+    return (
+      <div className="min-w-0">
+        <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">{rotulo}</p>
+        <p className={`truncate text-sm font-semibold ${alerta ? 'text-amber-600' : 'text-slate-800'}`}>
+          {children}
+        </p>
+      </div>
+    )
+  }
+
   return (
-    <tr className="hover:bg-slate-50">
-      <td className="px-4 py-2.5">
-        <Link to={para} className="font-semibold text-marca-700 hover:underline">
-          {nome}
-        </Link>
-      </td>
-      {cel(r.pendente)}
-      {cel(r.enviado)}
-      {cel(r.pago)}
-    </tr>
+    <Tag
+      onClick={onClick}
+      className={[
+        'block w-full rounded-xl border bg-white p-4 text-left shadow-sm',
+        linha || 'border-slate-200',
+        podeEditar ? 'transition hover:border-marca-300 hover:shadow active:scale-[0.99]' : '',
+      ].join(' ')}
+    >
+      {/* Linha de cima: produto + valor em destaque */}
+      <div className="flex items-start justify-between gap-3">
+        <p className="font-bold text-slate-900">{r.produto || '—'}</p>
+        <p className="whitespace-nowrap text-lg font-extrabold tabular-nums text-slate-900">
+          {formatarMoeda(r.valor_total)}
+        </p>
+      </div>
+
+      {/* Informações principais bem visíveis */}
+      <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3">
+        <Campo rotulo="Fornecedor">{r.fornecedor || '—'}</Campo>
+        <Campo rotulo="Pagar a (PF)" alerta={!r.empresa}>
+          {r.empresa || 'definir responsável'}
+        </Campo>
+        <Campo rotulo="CNPJ / CPF">{r.cnpj_cpf || '—'}</Campo>
+      </div>
+
+      {/* Rodapé: status, forma e marcador de definição */}
+      <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
+        <StatusBadge status={r.status} dataVencimento={r.data_vencimento} />
+        {r.forma_pagamento && (
+          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+            {r.forma_pagamento}
+          </span>
+        )}
+        {r.data_vencimento && (
+          <span className="text-xs text-slate-400">vence {formatarData(r.data_vencimento)}</span>
+        )}
+        {aba === 'pendente' && (
+          <span className="ml-auto">
+            {pronto ? (
+              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
+                ✓ pronto p/ pagar
+              </span>
+            ) : (
+              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700 ring-1 ring-amber-200">
+                definir
+              </span>
+            )}
+          </span>
+        )}
+      </div>
+    </Tag>
   )
 }
