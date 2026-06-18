@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useRealtimeTable } from '../hooks/useRealtimeTable.js'
 import { useAuth } from '../context/AuthContext.jsx'
+import { supabase } from '../lib/supabase.js'
 import {
   formatarMoeda,
   formatarData,
@@ -56,6 +57,7 @@ export default function Painel() {
   const { podeEditar, perfil } = useAuth()
 
   const [aba, setAba] = useState('pendente')
+  const [subPendente, setSubPendente] = useState('todos') // 'todos' | 'prontos' | 'falta'
   const [emEdicao, setEmEdicao] = useState(null)
   const [modalAberto, setModalAberto] = useState(false)
 
@@ -108,8 +110,10 @@ export default function Painel() {
 
   // Lista da aba selecionada (pendentes: "falta definir" primeiro)
   const lista = useMemo(() => {
-    const arr = [...porStatus[aba]]
+    let arr = [...porStatus[aba]]
     if (aba === 'pendente') {
+      if (subPendente === 'prontos') arr = arr.filter((r) => pedidoCompleto(r))
+      else if (subPendente === 'falta') arr = arr.filter((r) => !pedidoCompleto(r))
       arr.sort((a, b) => {
         const ua = a.prioridade ? 1 : 0
         const ub = b.prioridade ? 1 : 0
@@ -123,12 +127,20 @@ export default function Painel() {
       arr.sort((a, b) => (b.data || '').localeCompare(a.data || ''))
     }
     return arr
-  }, [porStatus, aba])
+  }, [porStatus, aba, subPendente])
 
   function abrirDefinicao(registro) {
     if (!podeEditar) return
     setEmEdicao(registro)
     setModalAberto(true)
+  }
+
+  async function mudarStatus(registro, novoStatus) {
+    await supabase
+      .from('solicitacoes')
+      .update({ status: novoStatus, updated_at: new Date().toISOString() })
+      .eq('id', registro.id)
+    // a lista atualiza sozinha pelo realtime
   }
 
   function abrirWhats(msg) {
@@ -339,10 +351,34 @@ export default function Painel() {
           })}
         </div>
 
+        {aba === 'pendente' && (
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            {[
+              { k: 'todos', r: `Todos (${porStatus.pendente.length})` },
+              { k: 'prontos', r: `✅ Prontos p/ enviar (${definicao.def.qtd})` },
+              { k: 'falta', r: `⏳ Falta definir (${definicao.falta.qtd})` },
+            ].map((s) => (
+              <button
+                key={s.k}
+                type="button"
+                onClick={() => setSubPendente(s.k)}
+                className={[
+                  'rounded-full px-3 py-1.5 text-xs font-semibold transition active:scale-95',
+                  subPendente === s.k
+                    ? 'bg-slate-800 text-white shadow-sm'
+                    : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50',
+                ].join(' ')}
+              >
+                {s.r}
+              </button>
+            ))}
+          </div>
+        )}
+
         {podeEditar && aba === 'pendente' && (
           <p className="mb-2 text-xs text-slate-500">
-            👉 Toque em um pedido para definir <strong>como vai ser pago</strong>, a{' '}
-            <strong>pessoa/PF</strong> e o <strong>CNPJ/CPF</strong>, e mudar o status.
+            👉 Toque para <strong>definir</strong> os dados. Quando estiver pronto, use{' '}
+            <strong>Enviar p/ pagamento</strong>. Depois de pago, <strong>Marcar como pago</strong>.
           </p>
         )}
 
@@ -360,6 +396,7 @@ export default function Painel() {
                 podeEditar={podeEditar}
                 onClick={() => abrirDefinicao(r)}
                 onCobrar={() => abrirWhats(msgItem(r))}
+                onStatus={(novo) => mudarStatus(r, novo)}
               />
             ))}
           </div>
@@ -382,7 +419,7 @@ export default function Painel() {
 }
 
 /** Item de pedido com fornecedor, valor, PF/CNPJ e data bem visíveis + o que falta. */
-function PedidoItem({ r, aba, podeEditar, onClick, onCobrar }) {
+function PedidoItem({ r, aba, podeEditar, onClick, onCobrar, onStatus }) {
   const linha = situacaoVencimento(r.status, r.data_vencimento).classeLinha
   const falta = pendenciasPagamento(r)
   const pronto = falta.length === 0
@@ -449,9 +486,22 @@ function PedidoItem({ r, aba, podeEditar, onClick, onCobrar }) {
         {aba === 'pendente' && (
           <div className="ml-auto flex items-center gap-2">
             {pronto ? (
-              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
-                ✓ pronto para enviar
-              </span>
+              <>
+                <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
+                  ✓ pronto
+                </span>
+                {podeEditar && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onStatus('Enviado')
+                    }}
+                    className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-blue-600 px-3 py-1 text-xs font-semibold text-white transition hover:bg-blue-700 active:scale-95"
+                  >
+                    Enviar p/ pagamento →
+                  </button>
+                )}
+              </>
             ) : (
               <>
                 <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700 ring-1 ring-amber-200">
@@ -471,6 +521,18 @@ function PedidoItem({ r, aba, podeEditar, onClick, onCobrar }) {
               </>
             )}
           </div>
+        )}
+
+        {aba === 'enviado' && podeEditar && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              onStatus('Pago')
+            }}
+            className="ml-auto inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-emerald-600 px-3 py-1 text-xs font-semibold text-white transition hover:bg-emerald-700 active:scale-95"
+          >
+            💰 Marcar como pago
+          </button>
         )}
       </div>
     </div>
