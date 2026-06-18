@@ -2,7 +2,8 @@
 // Formato: DDI + DDD + número, só dígitos. Ex.: Brasil (55) + (71) + 98888-7777
 //   => '5571988887777'
 // Deixe vazio ('') para abrir o WhatsApp e escolher o contato na hora.
-export const TELEFONE_GERENTE = ''
+// Atual: Thiago J — (71) 99609-7243  (teste)
+export const TELEFONE_GERENTE = '5571996097243'
 
 /** Monta o link "click to chat" do WhatsApp com a mensagem pré-preenchida. */
 export function linkWhatsApp(mensagem) {

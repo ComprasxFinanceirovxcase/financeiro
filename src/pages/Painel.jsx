@@ -128,13 +128,17 @@ export default function Painel() {
     setModalAberto(true)
   }
 
-  function avisarWhatsApp() {
+  function abrirWhats(msg) {
+    window.open(linkWhatsApp(msg), '_blank', 'noopener')
+  }
+
+  // Mensagem 1: resumo completo
+  function msgResumo() {
     const nome = perfil?.nome?.trim() || perfil?.email || 'Equipe de Compras'
     const pend = porStatus.pendente
     const totalValor = pend.reduce((s, r) => s + (Number(r.valor_total) || 0), 0)
     const faltam = pend.filter((r) => !pedidoCompleto(r))
     const faltamValor = faltam.reduce((s, r) => s + (Number(r.valor_total) || 0), 0)
-    const prontos = pend.length - faltam.length
 
     const l = []
     l.push('*💰 Financeiro · Compras*')
@@ -143,24 +147,63 @@ export default function Painel() {
     l.push('')
     l.push('📊 *Resumo dos pendentes*')
     l.push(`• Total a pagar: *${formatarMoeda(totalValor)}* (${pend.length} pedido(s))`)
-    l.push(`• ✅ Prontos para pagar: ${prontos} (${formatarMoeda(totalValor - faltamValor)})`)
+    l.push(`• ✅ Prontos para pagar: ${pend.length - faltam.length} (${formatarMoeda(totalValor - faltamValor)})`)
     l.push(`• ⏳ Falta definir: ${faltam.length} (${formatarMoeda(faltamValor)})`)
-
     if (faltam.length) {
       l.push('')
       l.push('⚠️ *Precisam de definição* (PF/CNPJ e data de pagamento):')
       faltam.slice(0, 10).forEach((r) => {
-        l.push(
-          `• ${r.produto || 'Pedido'} — ${formatarMoeda(r.valor_total)} _(falta: ${pendenciasPagamento(r).join(', ')})_`,
-        )
+        l.push(`• ${r.produto || 'Pedido'} — ${formatarMoeda(r.valor_total)} _(falta: ${pendenciasPagamento(r).join(', ')})_`)
       })
       if (faltam.length > 10) l.push(`• ...e mais ${faltam.length - 10} pedido(s)`)
     }
-
     l.push('')
     l.push('Podem revisar e dar andamento, por favor? 🙏')
+    return l.join('\n')
+  }
 
-    window.open(linkWhatsApp(l.join('\n')), '_blank', 'noopener')
+  // Mensagem 2: enxuta — só o que falta definir
+  function msgEnxuta() {
+    const faltam = porStatus.pendente.filter((r) => !pedidoCompleto(r))
+    const l = []
+    l.push('*💰 Financeiro · Compras*')
+    l.push('⚠️ *Faltam definir* (PF/CNPJ e data de pagamento):')
+    l.push('')
+    if (!faltam.length) {
+      l.push('✅ Tudo certo! Nenhum pendente sem definição.')
+    } else {
+      faltam.forEach((r) => {
+        l.push(`• ${r.produto || 'Pedido'} — ${formatarMoeda(r.valor_total)} _(falta: ${pendenciasPagamento(r).join(', ')})_`)
+      })
+      const tot = faltam.reduce((s, r) => s + (Number(r.valor_total) || 0), 0)
+      l.push('')
+      l.push(`Total: ${faltam.length} pedido(s) · *${formatarMoeda(tot)}*`)
+    }
+    l.push('')
+    l.push('Podem definir, por favor? 🙏')
+    return l.join('\n')
+  }
+
+  // Mensagem 3: cobrança de um pedido específico
+  function msgItem(r) {
+    const l = []
+    l.push('*💰 Financeiro · Compras*')
+    l.push('Falta definir um pagamento 👇')
+    l.push('')
+    l.push(`📦 *${r.produto || 'Pedido'}*`)
+    l.push(`💰 Valor: *${formatarMoeda(r.valor_total)}*`)
+    if (r.fornecedor) l.push(`🏪 Fornecedor: ${r.fornecedor}`)
+    if (r.empresa) l.push(`👤 Pagar a: ${r.empresa}`)
+    if (r.cnpj_cpf) l.push(`🧾 CNPJ/CPF: ${r.cnpj_cpf}`)
+    if (r.data_vencimento) l.push(`📅 Pagar em: ${formatarData(r.data_vencimento)}`)
+    const falta = pendenciasPagamento(r)
+    if (falta.length) {
+      l.push('')
+      l.push(`⚠️ *Falta:* ${falta.join(', ')}`)
+    }
+    l.push('')
+    l.push('Pode definir, por favor? 🙏')
+    return l.join('\n')
   }
 
   if (carregando) {
@@ -177,12 +220,20 @@ export default function Painel() {
           </p>
         </div>
         {podeEditar && (
-          <button
-            onClick={avisarWhatsApp}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600 active:scale-95"
-          >
-            <span className="text-base leading-none">📲</span> Avisar no WhatsApp
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => abrirWhats(msgResumo())}
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600 active:scale-95"
+            >
+              <span className="text-base leading-none">📲</span> Avisar (resumo)
+            </button>
+            <button
+              onClick={() => abrirWhats(msgEnxuta())}
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-500 bg-white px-4 py-2.5 text-sm font-semibold text-emerald-600 shadow-sm transition hover:bg-emerald-50 active:scale-95"
+            >
+              <span className="text-base leading-none">⚠️</span> Cobrar pendências
+            </button>
+          </div>
         )}
       </div>
 
@@ -302,6 +353,7 @@ export default function Painel() {
                 aba={aba}
                 podeEditar={podeEditar}
                 onClick={() => abrirDefinicao(r)}
+                onCobrar={() => abrirWhats(msgItem(r))}
               />
             ))}
           </div>
@@ -324,11 +376,10 @@ export default function Painel() {
 }
 
 /** Item de pedido com fornecedor, valor, PF/CNPJ e data bem visíveis + o que falta. */
-function PedidoItem({ r, aba, podeEditar, onClick }) {
+function PedidoItem({ r, aba, podeEditar, onClick, onCobrar }) {
   const linha = situacaoVencimento(r.status, r.data_vencimento).classeLinha
   const falta = pendenciasPagamento(r)
   const pronto = falta.length === 0
-  const Tag = podeEditar ? 'button' : 'div'
 
   function Campo({ rotulo, children, alerta }) {
     return (
@@ -342,12 +393,13 @@ function PedidoItem({ r, aba, podeEditar, onClick }) {
   }
 
   return (
-    <Tag
-      onClick={onClick}
+    <div
+      onClick={podeEditar ? onClick : undefined}
+      role={podeEditar ? 'button' : undefined}
       className={[
         'block w-full rounded-xl border bg-white p-4 text-left shadow-sm',
         linha || 'border-slate-200',
-        podeEditar ? 'transition hover:border-marca-300 hover:shadow active:scale-[0.99]' : '',
+        podeEditar ? 'cursor-pointer transition hover:border-marca-300 hover:shadow active:scale-[0.99]' : '',
       ].join(' ')}
     >
       {/* Linha de cima: produto + valor em destaque */}
@@ -381,19 +433,32 @@ function PedidoItem({ r, aba, podeEditar, onClick }) {
           </span>
         )}
         {aba === 'pendente' && (
-          <span className="ml-auto">
+          <div className="ml-auto flex items-center gap-2">
             {pronto ? (
               <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
                 ✓ pronto para enviar
               </span>
             ) : (
-              <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700 ring-1 ring-amber-200">
-                Falta: {falta.join(' · ')}
-              </span>
+              <>
+                <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700 ring-1 ring-amber-200">
+                  Falta: {falta.join(' · ')}
+                </span>
+                {podeEditar && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onCobrar()
+                    }}
+                    className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-emerald-500 px-2.5 py-1 text-xs font-semibold text-white transition hover:bg-emerald-600 active:scale-95"
+                  >
+                    📲 Cobrar
+                  </button>
+                )}
+              </>
             )}
-          </span>
+          </div>
         )}
       </div>
-    </Tag>
+    </div>
   )
 }
