@@ -111,6 +111,9 @@ export default function Painel() {
     const arr = [...porStatus[aba]]
     if (aba === 'pendente') {
       arr.sort((a, b) => {
+        const ua = a.prioridade ? 1 : 0
+        const ub = b.prioridade ? 1 : 0
+        if (ua !== ub) return ub - ua // urgentes primeiro
         const pa = pedidoCompleto(a) ? 1 : 0
         const pb = pedidoCompleto(b) ? 1 : 0
         if (pa !== pb) return pa - pb
@@ -150,10 +153,11 @@ export default function Painel() {
     l.push(`• ✅ Prontos para pagar: ${pend.length - faltam.length} (${formatarMoeda(totalValor - faltamValor)})`)
     l.push(`• ⏳ Falta definir: ${faltam.length} (${formatarMoeda(faltamValor)})`)
     if (faltam.length) {
+      const ordenados = [...faltam].sort((a, b) => (b.prioridade ? 1 : 0) - (a.prioridade ? 1 : 0))
       l.push('')
       l.push('⚠️ *Precisam de definição* (PF/CNPJ e data de pagamento):')
-      faltam.slice(0, 10).forEach((r) => {
-        l.push(`• ${r.produto || 'Pedido'} — ${formatarMoeda(r.valor_total)} _(falta: ${pendenciasPagamento(r).join(', ')})_`)
+      ordenados.slice(0, 10).forEach((r) => {
+        l.push(`• ${r.prioridade ? '🔴 ' : ''}${r.produto || 'Pedido'} — ${formatarMoeda(r.valor_total)} _(falta: ${pendenciasPagamento(r).join(', ')})_`)
       })
       if (faltam.length > 10) l.push(`• ...e mais ${faltam.length - 10} pedido(s)`)
     }
@@ -172,8 +176,9 @@ export default function Painel() {
     if (!faltam.length) {
       l.push('✅ Tudo certo! Nenhum pendente sem definição.')
     } else {
-      faltam.forEach((r) => {
-        l.push(`• ${r.produto || 'Pedido'} — ${formatarMoeda(r.valor_total)} _(falta: ${pendenciasPagamento(r).join(', ')})_`)
+      const ordenados = [...faltam].sort((a, b) => (b.prioridade ? 1 : 0) - (a.prioridade ? 1 : 0))
+      ordenados.forEach((r) => {
+        l.push(`• ${r.prioridade ? '🔴 ' : ''}${r.produto || 'Pedido'} — ${formatarMoeda(r.valor_total)} _(falta: ${pendenciasPagamento(r).join(', ')})_`)
       })
       const tot = faltam.reduce((s, r) => s + (Number(r.valor_total) || 0), 0)
       l.push('')
@@ -189,6 +194,7 @@ export default function Painel() {
     const l = []
     l.push('*💰 Financeiro · Compras*')
     l.push('Falta definir um pagamento 👇')
+    if (r.prioridade) l.push('🔴 *URGENTE — prioridade*')
     l.push('')
     l.push(`📦 *${r.produto || 'Pedido'}*`)
     l.push(`💰 Valor: *${formatarMoeda(r.valor_total)}*`)
@@ -398,13 +404,20 @@ function PedidoItem({ r, aba, podeEditar, onClick, onCobrar }) {
       role={podeEditar ? 'button' : undefined}
       className={[
         'block w-full rounded-xl border bg-white p-4 text-left shadow-sm',
-        linha || 'border-slate-200',
+        r.prioridade ? 'border-l-4 border-l-red-500' : linha || 'border-slate-200',
         podeEditar ? 'cursor-pointer transition hover:border-marca-300 hover:shadow active:scale-[0.99]' : '',
       ].join(' ')}
     >
       {/* Linha de cima: produto + valor em destaque */}
       <div className="flex items-start justify-between gap-3">
-        <p className="font-bold text-slate-900">{r.produto || '—'}</p>
+        <div className="min-w-0">
+          {r.prioridade && (
+            <span className="mb-1 inline-block rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-bold text-red-700 ring-1 ring-red-200">
+              🔴 Urgente
+            </span>
+          )}
+          <p className="font-bold text-slate-900">{r.produto || '—'}</p>
+        </div>
         <p className="whitespace-nowrap text-lg font-extrabold tabular-nums text-slate-900">
           {formatarMoeda(r.valor_total)}
         </p>

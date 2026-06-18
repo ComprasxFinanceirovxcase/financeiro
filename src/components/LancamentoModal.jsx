@@ -39,7 +39,11 @@ export default function LancamentoModal({
     const inicial = {}
     for (const campo of campos) {
       const v = registro?.[campo.nome]
-      inicial[campo.nome] = v === null || v === undefined ? '' : v
+      if (campo.tipo === 'checkbox') {
+        inicial[campo.nome] = Boolean(v)
+      } else {
+        inicial[campo.nome] = v === null || v === undefined ? '' : v
+      }
     }
     // status de um lançamento novo começa no padrão da tela
     if (!inicial.status) inicial.status = statusPadrao
@@ -170,6 +174,18 @@ export default function LancamentoModal({
                       onChange={(e) => definir(campo.nome, e.target.value)}
                       className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-marca-600 focus:ring-2 focus:ring-marca-100"
                     />
+                  ) : tipo === 'checkbox' ? (
+                    <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-300 px-3 py-2">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(valores[campo.nome])}
+                        onChange={(e) => definir(campo.nome, e.target.checked)}
+                        className="h-4 w-4 rounded border-slate-300 text-red-600 focus:ring-red-200"
+                      />
+                      <span className="text-sm text-slate-700">
+                        🔴 Marcar como <strong>urgente</strong> (prioridade)
+                      </span>
+                    </label>
                   ) : tipo === 'datalist' ? (
                     <>
                       <input
