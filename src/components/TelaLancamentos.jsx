@@ -20,12 +20,34 @@ import SummaryCards from './SummaryCards.jsx'
 import StatusBadge from './StatusBadge.jsx'
 import LancamentoModal from './LancamentoModal.jsx'
 
-function celula(registro, coluna) {
-  const valor = registro[coluna.chave]
-  if (coluna.tipo === 'moeda') return formatarMoeda(valor)
-  if (coluna.tipo === 'data') return formatarData(valor)
+function valorBruto(registro, chave, tipo) {
+  const valor = registro[chave]
+  if (tipo === 'moeda') return formatarMoeda(valor)
+  if (tipo === 'data') return formatarData(valor)
   if (valor === null || valor === undefined || valor === '') return '—'
   return String(valor)
+}
+
+/** Célula com valor principal + um subtexto opcional (coluna condensada). */
+function Celula({ r, c }) {
+  const principal = valorBruto(r, c.chave, c.tipo)
+  let sub = null
+  if (c.sub) {
+    const sv = valorBruto(r, c.sub, c.subTipo)
+    if (sv !== '—') sub = `${c.subRotulo ? c.subRotulo + ' ' : ''}${sv}`
+  }
+  return (
+    <>
+      <span
+        className={
+          c.tipo === 'moeda' ? 'font-semibold tabular-nums text-slate-800' : 'text-slate-800'
+        }
+      >
+        {principal}
+      </span>
+      {sub && <span className="mt-0.5 block truncate text-xs text-slate-400">{sub}</span>}
+    </>
+  )
 }
 
 export default function TelaLancamentos({
@@ -177,6 +199,7 @@ export default function TelaLancamentos({
   }, [filtrados])
 
   const totalCols = colunas.length + 1 + (podeEditar ? 1 : 0)
+  const colProduto = colunas.find((c) => c.chave === 'produto')
   const algumFiltroAvancado =
     Boolean(filtroResponsavel || valorMin || valorMax || dataDe || dataAte) || ordenar !== 'data'
 
@@ -359,23 +382,30 @@ export default function TelaLancamentos({
               </div>
               {grupo.rows.map((r) => {
                 const s = situacaoVencimento(r.status, r.data_vencimento)
+                const subProduto =
+                  colProduto?.sub ? valorBruto(r, colProduto.sub, colProduto.subTipo) : null
                 return (
                   <div
                     key={r.id}
                     className={`rounded-xl border border-slate-200 bg-white p-4 shadow-sm ${s.classeLinha}`}
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <p className="font-semibold text-slate-800">{r.produto || '—'}</p>
+                      <div className="min-w-0">
+                        <p className="font-semibold text-slate-800">{r.produto || '—'}</p>
+                        {subProduto && subProduto !== '—' && (
+                          <p className="truncate text-xs text-slate-400">{subProduto}</p>
+                        )}
+                      </div>
                       <StatusBadge status={r.status} dataVencimento={r.data_vencimento} />
                     </div>
-                    <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-sm">
+                    <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1.5 text-sm">
                       {colunas
                         .filter((c) => c.chave !== 'produto')
                         .map((c) => (
-                          <div key={c.chave}>
+                          <div key={c.chave} className="min-w-0">
                             <dt className="text-xs text-slate-400">{c.rotulo}</dt>
-                            <dd className={c.tipo === 'moeda' ? 'font-medium tabular-nums' : ''}>
-                              {celula(r, c)}
+                            <dd>
+                              <Celula r={r} c={c} />
                             </dd>
                           </div>
                         ))}
@@ -487,11 +517,11 @@ function FragmentoGrupo({
             {colunas.map((c) => (
               <td
                 key={c.chave}
-                className={`px-3 py-2.5 align-top ${c.className ?? ''} ${
-                  c.tipo === 'moeda' ? 'whitespace-nowrap text-right font-semibold tabular-nums text-slate-800' : ''
+                className={`px-3 py-2 align-top ${c.className ?? ''} ${
+                  c.tipo === 'moeda' ? 'whitespace-nowrap text-right' : ''
                 }`}
               >
-                {celula(r, c)}
+                <Celula r={r} c={c} />
               </td>
             ))}
             <td className="px-3 py-2.5 align-top">

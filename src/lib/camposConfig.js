@@ -1,15 +1,13 @@
 // Configuração das colunas (tabela) e campos (formulário) de cada tela.
 // Centralizado aqui para ser reaproveitado pelas páginas e pela Visão geral.
 
+// Colunas condensadas: cada uma mostra um valor principal + um subtexto,
+// para caber tudo na tela sem rolar.
 export const COLUNAS_SOLICITACOES = [
-  { chave: 'data', rotulo: 'Data', tipo: 'data' },
-  { chave: 'produto', rotulo: 'Produto', className: 'min-w-[14rem]' },
-  { chave: 'fornecedor', rotulo: 'Fornecedor' },
-  { chave: 'valor_total', rotulo: 'Valor total', tipo: 'moeda' },
-  { chave: 'forma_pagamento', rotulo: 'Forma de pgto.' },
-  { chave: 'empresa', rotulo: 'Responsável' },
-  { chave: 'cnpj_cpf', rotulo: 'CNPJ/CPF' },
-  { chave: 'data_vencimento', rotulo: 'Vencimento', tipo: 'data' },
+  { chave: 'data', rotulo: 'Data', tipo: 'data', sub: 'data_vencimento', subTipo: 'data', subRotulo: 'venc.' },
+  { chave: 'produto', rotulo: 'Produto', sub: 'fornecedor', className: 'min-w-[12rem] max-w-[20rem]' },
+  { chave: 'valor_total', rotulo: 'Valor', tipo: 'moeda', sub: 'forma_pagamento' },
+  { chave: 'empresa', rotulo: 'Responsável', sub: 'cnpj_cpf', className: 'max-w-[12rem]' },
 ]
 
 export const CAMPOS_SOLICITACOES = [
@@ -34,12 +32,9 @@ export const CAMPOS_SOLICITACOES = [
 
 export const COLUNAS_FUNDO = [
   { chave: 'data', rotulo: 'Data', tipo: 'data' },
-  { chave: 'produto', rotulo: 'Produto', className: 'min-w-[14rem]' },
-  { chave: 'detalhamento', rotulo: 'Detalhamento', className: 'min-w-[14rem]' },
-  { chave: 'fornecedor', rotulo: 'Fornecedor' },
-  { chave: 'valor_total', rotulo: 'Valor total', tipo: 'moeda' },
-  { chave: 'forma_pagamento', rotulo: 'Forma de pgto.' },
-  { chave: 'conta_pagamento', rotulo: 'Responsável' },
+  { chave: 'produto', rotulo: 'Produto', sub: 'detalhamento', className: 'min-w-[12rem] max-w-[22rem]' },
+  { chave: 'valor_total', rotulo: 'Valor', tipo: 'moeda', sub: 'forma_pagamento' },
+  { chave: 'conta_pagamento', rotulo: 'Responsável', sub: 'fornecedor', className: 'max-w-[12rem]' },
   { chave: 'nf', rotulo: 'NF' },
 ]
 
