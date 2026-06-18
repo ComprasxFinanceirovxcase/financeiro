@@ -20,3 +20,6 @@ dist-ssr
 
 # Dados financeiros (já estão no Supabase) — não publicar no repositório
 data/
+
+# Scripts utilitários locais (conversão de planilha, etc.)
+scripts/

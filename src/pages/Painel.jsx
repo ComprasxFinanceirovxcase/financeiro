@@ -417,6 +417,7 @@ function PedidoItem({ r, aba, podeEditar, onClick, onCobrar }) {
             </span>
           )}
           <p className="font-bold text-slate-900">{r.produto || '—'}</p>
+          <p className="text-xs text-slate-400">📅 Lançado em {formatarData(r.data)}</p>
         </div>
         <p className="whitespace-nowrap text-lg font-extrabold tabular-nums text-slate-900">
           {formatarMoeda(r.valor_total)}
