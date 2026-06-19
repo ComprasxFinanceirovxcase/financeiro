@@ -46,7 +46,9 @@ function Celula({ r, c }) {
       >
         {principal}
       </span>
-      {sub && <span className="mt-0.5 block truncate text-xs text-slate-400">{sub}</span>}
+      {sub && (
+        <span className={`mt-0.5 block truncate text-xs ${c.subClasse || 'text-slate-400'}`}>{sub}</span>
+      )}
     </>
   )
 }
@@ -147,6 +149,16 @@ export default function TelaLancamentos({
     const ord = [...arr]
     if (ordenar === 'maior') ord.sort((a, b) => (Number(b.valor_total) || 0) - (Number(a.valor_total) || 0))
     else if (ordenar === 'menor') ord.sort((a, b) => (Number(a.valor_total) || 0) - (Number(b.valor_total) || 0))
+    else if (ordenar === 'pagamento')
+      ord.sort((a, b) => {
+        // Por data de pagamento (mais próxima primeiro); sem data vai para o fim
+        const da = a.data_vencimento || ''
+        const db = b.data_vencimento || ''
+        if (!da && !db) return 0
+        if (!da) return 1
+        if (!db) return -1
+        return da.localeCompare(db)
+      })
     else
       ord.sort((a, b) => {
         const da = a.data ?? ''

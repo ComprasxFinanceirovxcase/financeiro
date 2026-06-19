@@ -70,7 +70,7 @@ export default function FiltrosAvancados({
 
         <div className="flex flex-col">
           <label className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-            Data
+            Lançamento (de / até)
           </label>
           <div className="flex items-center gap-1">
             <input type="date" value={dataDe} onChange={(e) => setDataDe(e.target.value)} className={campo} />
@@ -84,7 +84,8 @@ export default function FiltrosAvancados({
             Ordenar por
           </label>
           <select value={ordenar} onChange={(e) => setOrdenar(e.target.value)} className={campo}>
-            <option value="data">Data (mais recente)</option>
+            <option value="data">Data de lançamento (recente)</option>
+            <option value="pagamento">📅 Data de pagamento (mais próxima)</option>
             <option value="maior">Maior valor</option>
             <option value="menor">Menor valor</option>
           </select>
