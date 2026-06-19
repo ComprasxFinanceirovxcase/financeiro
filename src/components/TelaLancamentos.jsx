@@ -31,13 +31,17 @@ function valorBruto(registro, chave, tipo) {
 }
 
 /** Célula com valor principal + um subtexto opcional (coluna condensada). */
+function montarSub(r, chave, tipo, rotulo) {
+  if (!chave) return null
+  const v = valorBruto(r, chave, tipo)
+  if (v === '—') return null
+  return `${rotulo ? rotulo + ' ' : ''}${v}`
+}
+
 function Celula({ r, c }) {
   const principal = valorBruto(r, c.chave, c.tipo)
-  let sub = null
-  if (c.sub) {
-    const sv = valorBruto(r, c.sub, c.subTipo)
-    if (sv !== '—') sub = `${c.subRotulo ? c.subRotulo + ' ' : ''}${sv}`
-  }
+  const sub = montarSub(r, c.sub, c.subTipo, c.subRotulo)
+  const sub2 = montarSub(r, c.sub2, c.sub2Tipo, c.sub2Rotulo)
   return (
     <>
       <span
@@ -49,6 +53,9 @@ function Celula({ r, c }) {
       </span>
       {sub && (
         <span className={`mt-0.5 block truncate text-xs ${c.subClasse || 'text-slate-400'}`}>{sub}</span>
+      )}
+      {sub2 && (
+        <span className={`mt-0.5 block truncate text-xs ${c.sub2Classe || 'text-slate-400'}`}>{sub2}</span>
       )}
     </>
   )

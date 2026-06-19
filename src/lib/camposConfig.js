@@ -7,7 +7,15 @@ export const COLUNAS_SOLICITACOES = [
   { chave: 'data', rotulo: 'Data', tipo: 'data', sub: 'data_vencimento', subTipo: 'data', subRotulo: '📅 Pagar em', subClasse: 'text-blue-600 font-semibold' },
   { chave: 'produto', rotulo: 'Produto', sub: 'fornecedor', className: 'min-w-[12rem] max-w-[20rem]' },
   { chave: 'valor_total', rotulo: 'Valor', tipo: 'moeda', sub: 'forma_pagamento' },
-  { chave: 'empresa', rotulo: 'Responsável', sub: 'cnpj_cpf', className: 'max-w-[12rem]' },
+  {
+    chave: 'empresa',
+    rotulo: 'Responsável',
+    sub: 'cnpj_cpf',
+    sub2: 'pagador',
+    sub2Rotulo: '💳 Paga:',
+    sub2Classe: 'text-slate-500 font-medium',
+    className: 'max-w-[12rem]',
+  },
 ]
 
 export const CAMPOS_SOLICITACOES = [
