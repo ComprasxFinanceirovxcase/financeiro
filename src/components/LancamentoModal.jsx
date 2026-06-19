@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import { OPCOES_STATUS } from '../lib/format.js'
+import Anexos from './Anexos.jsx'
 
 /**
  * Modal de criação/edição de lançamento, dirigido por uma lista de campos.
@@ -26,6 +27,7 @@ export default function LancamentoModal({
   aoSalvar,
   statusPadrao = 'Pendente',
   sugestoes = {},
+  comAnexos = false,
 }) {
   const { usuario } = useAuth()
   const [valores, setValores] = useState({})
@@ -215,6 +217,26 @@ export default function LancamentoModal({
               )
             })}
           </div>
+
+          {comAnexos && (
+            <div className="mt-5 border-t border-slate-100 pt-4">
+              <p className="mb-2 text-sm font-semibold text-slate-700">
+                📎 Anexos (NF, comprovante)
+              </p>
+              {editando ? (
+                <Anexos
+                  tabela={tabela}
+                  registroId={registro.id}
+                  anexosIniciais={registro.anexos}
+                  podeEditar
+                />
+              ) : (
+                <p className="text-sm text-slate-400">
+                  Salve o lançamento primeiro; depois reabra para anexar a NF/comprovante.
+                </p>
+              )}
+            </div>
+          )}
 
           {erro && (
             <div className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700 ring-1 ring-red-200">

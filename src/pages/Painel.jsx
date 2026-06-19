@@ -412,6 +412,7 @@ export default function Painel() {
           campos={CAMPOS_SOLICITACOES}
           registro={emEdicao}
           sugestoes={sugestoes}
+          comAnexos
         />
       )}
     </div>
@@ -455,6 +456,14 @@ function PedidoItem({ r, aba, podeEditar, onClick, onCobrar, onStatus }) {
           )}
           <p className="font-bold text-slate-900">{r.produto || '—'}</p>
           <p className="text-xs text-slate-400">📅 Lançado em {formatarData(r.data)}</p>
+          <div className="mt-0.5 flex flex-wrap gap-2 text-xs">
+            {r.codigo_glpi && (
+              <span className="font-semibold text-slate-500">GLPI: {r.codigo_glpi}</span>
+            )}
+            {Array.isArray(r.anexos) && r.anexos.length > 0 && (
+              <span className="font-semibold text-marca-700">📎 {r.anexos.length} anexo(s)</span>
+            )}
+          </div>
         </div>
         <p className="whitespace-nowrap text-lg font-extrabold tabular-nums text-slate-900">
           {formatarMoeda(r.valor_total)}

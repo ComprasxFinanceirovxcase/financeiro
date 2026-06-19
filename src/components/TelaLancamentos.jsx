@@ -20,6 +20,7 @@ import StatusTabs from './StatusTabs.jsx'
 import SummaryCards from './SummaryCards.jsx'
 import StatusBadge from './StatusBadge.jsx'
 import LancamentoModal from './LancamentoModal.jsx'
+import Anexos from './Anexos.jsx'
 
 function valorBruto(registro, chave, tipo) {
   const valor = registro[chave]
@@ -60,6 +61,7 @@ export default function TelaLancamentos({
   campos,
   statusWorkflow = true,
   campoResponsavel = 'empresa',
+  comAnexos = false,
 }) {
   const { registros, carregando, erro } = useRealtimeTable(tabela)
   const { podeEditar, ehAdmin } = useAuth()
@@ -76,6 +78,7 @@ export default function TelaLancamentos({
   const [ordenar, setOrdenar] = useState('data')
   const [modalAberto, setModalAberto] = useState(false)
   const [emEdicao, setEmEdicao] = useState(null)
+  const [verAnexos, setVerAnexos] = useState(null)
 
   const statusPadrao = statusWorkflow ? 'Pendente' : 'Pago'
 
@@ -369,6 +372,7 @@ export default function TelaLancamentos({
                     onStatus={mudarStatus}
                     onEditar={abrirEdicao}
                     onExcluir={excluir}
+                    onVerAnexos={setVerAnexos}
                   />
                 ))
               )}
@@ -419,7 +423,20 @@ export default function TelaLancamentos({
                           <p className="truncate text-xs text-slate-400">{subProduto}</p>
                         )}
                       </div>
-                      <StatusBadge status={r.status} dataVencimento={r.data_vencimento} />
+                      <div className="flex shrink-0 flex-col items-end gap-1">
+                        <StatusBadge status={r.status} dataVencimento={r.data_vencimento} />
+                        {Array.isArray(r.anexos) && r.anexos.length > 0 && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setVerAnexos(r)
+                            }}
+                            className="rounded-md px-2 py-0.5 text-xs font-semibold text-marca-700 hover:bg-marca-50"
+                          >
+                            📎 {r.anexos.length}
+                          </button>
+                        )}
+                      </div>
                     </div>
                     <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1.5 text-sm">
                       {colunas
@@ -489,7 +506,39 @@ export default function TelaLancamentos({
           registro={emEdicao}
           statusPadrao={statusPadrao}
           sugestoes={sugestoes}
+          comAnexos={comAnexos}
         />
+      )}
+
+      {/* Visualizador de anexos (todos os usuários logados) */}
+      {verAnexos && (
+        <div
+          className="fixed inset-0 z-40 flex items-end justify-center bg-slate-900/50 p-0 sm:items-center sm:p-4"
+          onClick={() => setVerAnexos(null)}
+        >
+          <div
+            className="w-full max-w-md rounded-t-2xl bg-white p-5 shadow-2xl sm:rounded-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-base font-bold text-slate-800">📎 Anexos do pedido</h2>
+              <button
+                onClick={() => setVerAnexos(null)}
+                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100"
+                aria-label="Fechar"
+              >
+                ✕
+              </button>
+            </div>
+            <p className="mb-3 truncate text-sm text-slate-500">{verAnexos.produto}</p>
+            <Anexos
+              tabela={tabela}
+              registroId={verAnexos.id}
+              anexosIniciais={verAnexos.anexos}
+              podeEditar={podeEditar}
+            />
+          </div>
+        </div>
       )}
     </div>
   )
@@ -524,6 +573,7 @@ function FragmentoGrupo({
   onStatus,
   onEditar,
   onExcluir,
+  onVerAnexos,
 }) {
   return (
     <>
@@ -588,6 +638,17 @@ function FragmentoGrupo({
                 </select>
               ) : (
                 <StatusBadge status={r.status} dataVencimento={r.data_vencimento} />
+              )}
+              {Array.isArray(r.anexos) && r.anexos.length > 0 && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onVerAnexos(r)
+                  }}
+                  className="mt-1 block rounded-md px-2 py-1 text-xs font-semibold text-marca-700 hover:bg-marca-50"
+                >
+                  📎 {r.anexos.length}
+                </button>
               )}
             </td>
             {podeEditar && (

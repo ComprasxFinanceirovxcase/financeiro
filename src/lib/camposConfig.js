@@ -13,6 +13,7 @@ export const COLUNAS_SOLICITACOES = [
 export const CAMPOS_SOLICITACOES = [
   { nome: 'data', rotulo: 'Data', tipo: 'date', obrigatorio: true },
   { nome: 'produto', rotulo: 'Produto', obrigatorio: true, largura: 'full' },
+  { nome: 'codigo_glpi', rotulo: 'Código GLPI (chamado)' },
   { nome: 'quantidade', rotulo: 'Quantidade', tipo: 'number' },
   { nome: 'valor_total', rotulo: 'Valor total (R$)', tipo: 'number', obrigatorio: true },
   { nome: 'valor_unitario', rotulo: 'Valor unitário (R$)', tipo: 'number' },

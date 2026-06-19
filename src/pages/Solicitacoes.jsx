@@ -9,6 +9,7 @@ export default function Solicitacoes() {
       colunas={COLUNAS_SOLICITACOES}
       campos={CAMPOS_SOLICITACOES}
       statusWorkflow
+      comAnexos
     />
   )
 }
