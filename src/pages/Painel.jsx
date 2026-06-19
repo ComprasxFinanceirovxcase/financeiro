@@ -39,11 +39,9 @@ function ordenarUrgentes(lista) {
   return [...lista].sort((a, b) => (b.prioridade ? 1 : 0) - (a.prioridade ? 1 : 0))
 }
 
-function linhaItemWhats(r) {
-  let s = `• ${r.prioridade ? '🔴 ' : ''}${r.produto || 'Pedido'} — ${formatarMoeda(r.valor_total)}`
+function linhaItemWhats(r, i) {
+  let s = `${i}. ${r.prioridade ? '🔴 ' : ''}*${r.produto || 'Pedido'}* — *${formatarMoeda(r.valor_total)}*`
   if (r.codigo_glpi) s += `  🔖 ${r.codigo_glpi}`
-  const falta = pendenciasPagamento(r)
-  if (falta.length) s += `  _(falta: ${falta.join(', ')})_`
   return s
 }
 
@@ -166,50 +164,50 @@ export default function Painel() {
     window.open(linkWhatsApp(msg), '_blank', 'noopener')
   }
 
-  // Mensagem 1: resumo completo
+  // Mensagem 1: resumo
   function msgResumo() {
     const nome = perfil?.nome?.trim() || 'Equipe de Compras'
     const pend = porStatus.pendente
     const totalValor = pend.reduce((s, r) => s + (Number(r.valor_total) || 0), 0)
-    const faltam = pend.filter((r) => !pedidoCompleto(r))
-    const faltamValor = faltam.reduce((s, r) => s + (Number(r.valor_total) || 0), 0)
+    const faltam = ordenarUrgentes(pend.filter((r) => !pedidoCompleto(r)))
 
     const l = []
     l.push('*💰 FINANCEIRO · COMPRAS*')
-    l.push(`_Resumo de ${formatarData(hojeISO())} — por ${nome}_`)
-    l.push('━━━━━━━━━━━━━━━')
-    l.push(`💵 *A pagar (pendentes):* ${formatarMoeda(totalValor)}  _(${pend.length} pedidos)_`)
-    l.push(`✅ Prontos p/ enviar: *${pend.length - faltam.length}*  _(${formatarMoeda(totalValor - faltamValor)})_`)
-    l.push(`⏳ Falta definir: *${faltam.length}*  _(${formatarMoeda(faltamValor)})_`)
+    l.push(`_${formatarData(hojeISO())} · por ${nome}_`)
+    l.push('')
+    l.push(`📌 *${pend.length} pedidos pendentes* — total *${formatarMoeda(totalValor)}*`)
     if (faltam.length) {
       l.push('')
-      l.push('⚠️ *Precisam de definição (PF/CNPJ + data):*')
-      ordenarUrgentes(faltam)
-        .slice(0, 12)
-        .forEach((r) => l.push(linhaItemWhats(r)))
-      if (faltam.length > 12) l.push(`_...e mais ${faltam.length - 12} pedido(s)_`)
+      l.push('⚠️ Os pedidos abaixo *precisam ser definidos*:')
+      l.push('Falta o *PF/CNPJ* (onde sai a NF) e/ou a *data de pagamento*.')
+      l.push('')
+      faltam.slice(0, 30).forEach((r, i) => l.push(linhaItemWhats(r, i + 1)))
+      if (faltam.length > 30) l.push(`_...e mais ${faltam.length - 30} pedido(s)_`)
     }
-    l.push('━━━━━━━━━━━━━━━')
+    l.push('')
     l.push('Podem revisar e dar andamento, por favor? 🙏')
     return l.join('\n')
   }
 
-  // Mensagem 2: enxuta — só o que falta definir
+  // Mensagem 2: cobrança enxuta
   function msgEnxuta() {
-    const faltam = porStatus.pendente.filter((r) => !pedidoCompleto(r))
+    const faltam = ordenarUrgentes(porStatus.pendente.filter((r) => !pedidoCompleto(r)))
     const l = []
     l.push('*💰 FINANCEIRO · COMPRAS*')
-    l.push('⚠️ *Faltam definir* — PF/CNPJ + data de pagamento')
-    l.push('━━━━━━━━━━━━━━━')
+    l.push('')
     if (!faltam.length) {
-      l.push('✅ Tudo certo! Nenhum pendente sem definição.')
-    } else {
-      ordenarUrgentes(faltam).forEach((r) => l.push(linhaItemWhats(r)))
-      const tot = faltam.reduce((s, r) => s + (Number(r.valor_total) || 0), 0)
-      l.push('━━━━━━━━━━━━━━━')
-      l.push(`*Total:* ${faltam.length} pedido(s) · *${formatarMoeda(tot)}*`)
+      l.push('✅ Tudo certo! Nenhum pedido pendente de definição.')
+      return l.join('\n')
     }
-    l.push('Podem definir, por favor? 🙏')
+    l.push('Olá! 👋 Os pedidos abaixo *precisam ser definidos* para irem ao pagamento.')
+    l.push('Falta o *PF/CNPJ* (onde sai a NF) e/ou a *data de pagamento*:')
+    l.push('')
+    faltam.forEach((r, i) => l.push(linhaItemWhats(r, i + 1)))
+    const tot = faltam.reduce((s, r) => s + (Number(r.valor_total) || 0), 0)
+    l.push('')
+    l.push(`*Total: ${faltam.length} pedido(s) · ${formatarMoeda(tot)}*`)
+    l.push('')
+    l.push('Conseguem definir, por favor? 🙏')
     return l.join('\n')
   }
 
@@ -221,7 +219,7 @@ export default function Painel() {
     l.push('Falta definir um pagamento 👇')
     l.push('━━━━━━━━━━━━━━━')
     l.push(`📦 *${r.produto || 'Pedido'}*`)
-    l.push(`💵 ${formatarMoeda(r.valor_total)}`)
+    l.push(`💵 *${formatarMoeda(r.valor_total)}*`)
     if (r.codigo_glpi) l.push(`🔖 GLPI: ${r.codigo_glpi}`)
     if (r.fornecedor) l.push(`🏪 ${r.fornecedor}`)
     if (r.empresa) l.push(`👤 Pago por: ${r.empresa}`)
