@@ -277,15 +277,31 @@ export default function TelaLancamentos({
         )}
       </div>
 
-      <SummaryCards
-        totalGasto={resumo.total}
-        qtdPendentes={resumo.pendentes}
-        qtdEnviados={resumo.enviados}
-        qtdPagos={resumo.pagos}
-        qtdReembolsados={resumo.reembolsados}
-        qtdTotal={resumo.qtd}
-        modoSimples={!statusWorkflow}
-      />
+      {statusWorkflow ? (
+        <div className="flex flex-wrap items-end justify-between gap-2 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+              Total gasto no período
+            </p>
+            <p className="mt-0.5 text-3xl font-extrabold text-slate-800">
+              {formatarMoeda(resumo.total)}
+            </p>
+          </div>
+          <p className="text-sm text-slate-400">
+            {resumo.qtd} {resumo.qtd === 1 ? 'item' : 'itens'} · exceto reembolsados
+          </p>
+        </div>
+      ) : (
+        <SummaryCards
+          totalGasto={resumo.total}
+          qtdPendentes={resumo.pendentes}
+          qtdEnviados={resumo.enviados}
+          qtdPagos={resumo.pagos}
+          qtdReembolsados={resumo.reembolsados}
+          qtdTotal={resumo.qtd}
+          modoSimples
+        />
+      )}
 
       <PeriodFilter
         anos={anosDisponiveis}
