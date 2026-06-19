@@ -1,3 +1,5 @@
+import { LISTAS_CADASTRO } from './listasCadastro.js'
+
 // Listas fixas (curadas pelo admin) usadas como sugestões nos formulários.
 // Você pode me passar os nomes/CNPJs/fornecedores que eu preencho aqui.
 //
@@ -78,9 +80,9 @@ export const LISTAS = {
 }
 
 // Remove códigos/números no INÍCIO do texto (ex.: "272 - ", "2x -134 - ",
-// "73 - 6x - "), preservando números no meio/fim do nome.
+// "73 - 6x - "), preservando palavras que começam com letra (ex.: "Xerox").
 function limparPrefixoNumerico(v) {
-  const limpo = v.replace(/^[\s\d.xX×\-–—]+/, '').trim()
+  const limpo = v.replace(/^([\d.]+\s*[xX]?\s*|[\s\-–—×]+)+/, '').trim()
   return limpo || v.trim()
 }
 
@@ -99,24 +101,40 @@ const NORMALIZADORES = {
   cidade_estado: normalizarCidadeEstado,
 }
 
+// Chave para comparar valores ignorando acento, maiúsculas, espaços e pontuação.
+// "DELL" e "Dell", "PF IGOR" e "PF - Igor", "Flex form" e "Flexform" => mesma chave.
+function chaveCanonica(v) {
+  return String(v)
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '')
+}
+
 /**
- * Monta a lista de sugestões de um campo: junta a lista curada (LISTAS)
- * com os valores já existentes nos registros, aplica limpeza/normalização
- * quando houver, remove repetidos e ordena.
+ * Monta a lista de sugestões de um campo: junta a lista curada (LISTAS),
+ * a lista vinda da planilha (LISTAS_CADASTRO) e os valores já existentes nos
+ * registros; aplica limpeza/normalização, remove duplicidades de forma
+ * inteligente (acento/maiúscula/espaço) e ordena.
  */
 export function montarSugestoes(nomeCampo, registros) {
-  const set = new Set()
   const norm = NORMALIZADORES[nomeCampo]
+  const mapa = new Map() // chaveCanonica -> texto exibido (1ª ocorrência vence)
+
   const adicionar = (bruto) => {
     if (bruto === null || bruto === undefined) return
     let s = String(bruto).trim()
     if (!s || s === '-') return
     if (norm) s = norm(s)
-    if (s) set.add(s)
+    if (!s) return
+    const k = chaveCanonica(s)
+    if (k && !mapa.has(k)) mapa.set(k, s)
   }
 
+  // Ordem de preferência: curada > planilha > dados já lançados
   for (const v of LISTAS[nomeCampo] ?? []) adicionar(v)
+  for (const v of LISTAS_CADASTRO[nomeCampo] ?? []) adicionar(v)
   for (const r of registros ?? []) adicionar(r[nomeCampo])
 
-  return [...set].sort((a, b) => a.localeCompare(b, 'pt-BR'))
+  return [...mapa.values()].sort((a, b) => a.localeCompare(b, 'pt-BR'))
 }
