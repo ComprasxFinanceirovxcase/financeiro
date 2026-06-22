@@ -34,6 +34,22 @@ export const LISTAS = {
   // Responsáveis que executam o pagamento (as "meninas" do financeiro)
   pagador: [],
 
+  // Quem solicitou a compra
+  solicitante: [
+    'Carine Silveira',
+    'Carliane Santos',
+    'Daiane Moinhos',
+    'Edilane Cunha',
+    'Geisa Freitas',
+    'Jéssica Freitas',
+    'Michelle Tosta',
+    'Paula Rohrs',
+    'Rachel Amorim',
+    'Roberta Alves',
+    'Sinara Santos',
+    'Sophia Goodwin',
+  ],
+
   // Fornecedores recorrentes (Mercado Livre já unificado)
   fornecedor: [
     'Mercado Livre',

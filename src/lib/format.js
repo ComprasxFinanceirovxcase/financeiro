@@ -171,3 +171,22 @@ export function pendenciasPagamento(r) {
 export function pedidoCompleto(r) {
   return pendenciasPagamento(r).length === 0
 }
+
+/**
+ * Alerta de vencimento da data de pagamento, só para o que NÃO foi pago.
+ * Retorna { tipo: 'vencido'|'vence', dias, label } ou null.
+ */
+export function alertaVencimento(r) {
+  const g = grupoStatus(r.status)
+  if (g === 'pago' || g === 'reembolsado') return null
+  if (!r.data_vencimento) return null
+  const dias = diasAteVencimento(r.data_vencimento)
+  if (dias === null) return null
+  if (dias < 0) {
+    const n = Math.abs(dias)
+    return { tipo: 'vencido', dias, label: `Venceu há ${n} dia${n === 1 ? '' : 's'}` }
+  }
+  if (dias === 0) return { tipo: 'vence', dias, label: 'Vence hoje' }
+  if (dias <= 5) return { tipo: 'vence', dias, label: `Vence em ${dias} dia${dias === 1 ? '' : 's'}` }
+  return null
+}

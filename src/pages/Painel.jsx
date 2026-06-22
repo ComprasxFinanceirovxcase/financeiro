@@ -9,6 +9,7 @@ import {
   hojeISO,
   grupoStatus,
   situacaoVencimento,
+  alertaVencimento,
   pendenciasPagamento,
   pedidoCompleto,
 } from '../lib/format.js'
@@ -241,6 +242,7 @@ export default function Painel() {
     if (r.empresa) l.push(`👤 Pago por: ${r.empresa}`)
     if (r.cnpj_cpf) l.push(`🧾 ${r.cnpj_cpf}`)
     if (r.pagador) l.push(`👩 Quem paga: ${r.pagador}`)
+    if (r.solicitante) l.push(`🙋 Solicitante: ${r.solicitante}`)
     if (r.data_vencimento) l.push(`📅 Pagar em: ${formatarData(r.data_vencimento)}`)
     const falta = pendenciasPagamento(r)
     if (falta.length) {
@@ -437,6 +439,7 @@ function PedidoItem({ r, aba, podeEditar, onClick, onCobrar, onStatus }) {
   const falta = pendenciasPagamento(r)
   const pronto = falta.length === 0
   const g = grupoStatus(r.status)
+  const alerta = alertaVencimento(r)
   const corBorda = r.prioridade
     ? 'border-l-4 border-l-red-500'
     : {
@@ -473,6 +476,7 @@ function PedidoItem({ r, aba, podeEditar, onClick, onCobrar, onStatus }) {
         {r.fornecedor && <span>🏪 {r.fornecedor}</span>}
         {r.empresa && <span>👤 {r.empresa}</span>}
         {r.pagador && <span>👩 {r.pagador}</span>}
+        {r.solicitante && <span>🙋 {r.solicitante}</span>}
         {r.data_vencimento && (
           <span className="font-semibold text-blue-600">📅 {formatarData(r.data_vencimento)}</span>
         )}
@@ -485,6 +489,17 @@ function PedidoItem({ r, aba, podeEditar, onClick, onCobrar, onStatus }) {
       {/* Linha 3: status + o que falta / ação */}
       <div className="mt-2 flex flex-wrap items-center gap-2">
         <StatusBadge status={r.status} dataVencimento={r.data_vencimento} />
+        {alerta && (
+          <span
+            className={`rounded-full px-2 py-0.5 text-xs font-bold ${
+              alerta.tipo === 'vencido'
+                ? 'bg-red-100 text-red-700 ring-1 ring-red-200'
+                : 'bg-amber-100 text-amber-700 ring-1 ring-amber-200'
+            }`}
+          >
+            ⏰ {alerta.label}
+          </span>
+        )}
         {r.forma_pagamento && (
           <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
             {r.forma_pagamento}

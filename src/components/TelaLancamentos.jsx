@@ -10,6 +10,7 @@ import {
   rotuloMes,
   grupoStatus,
   situacaoVencimento,
+  alertaVencimento,
   OPCOES_STATUS,
 } from '../lib/format.js'
 import { montarSugestoes } from '../lib/opcoes.js'
@@ -470,6 +471,7 @@ export default function TelaLancamentos({
                 const s = situacaoVencimento(r.status, r.data_vencimento)
                 const subProduto =
                   colProduto?.sub ? valorBruto(r, colProduto.sub, colProduto.subTipo) : null
+                const alertaM = alertaVencimento(r)
                 const corBordaM = r.prioridade
                   ? 'border-l-4 border-l-red-500'
                   : {
@@ -498,6 +500,17 @@ export default function TelaLancamentos({
                       </div>
                       <div className="flex shrink-0 flex-col items-end gap-1">
                         <StatusBadge status={r.status} dataVencimento={r.data_vencimento} />
+                        {alertaM && (
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
+                              alertaM.tipo === 'vencido'
+                                ? 'bg-red-100 text-red-700 ring-1 ring-red-200'
+                                : 'bg-amber-100 text-amber-700 ring-1 ring-amber-200'
+                            }`}
+                          >
+                            ⏰ {alertaM.label}
+                          </span>
+                        )}
                         {Array.isArray(r.anexos) && r.anexos.length > 0 && (
                           <button
                             onClick={(e) => {
@@ -666,6 +679,7 @@ function FragmentoGrupo({
       {grupo.rows.map((r) => {
         const s = situacaoVencimento(r.status, r.data_vencimento)
         const g = grupoStatus(r.status)
+        const alerta = alertaVencimento(r)
         const corSel =
           {
             pendente: 'border-amber-300 bg-amber-50 text-amber-800',
@@ -720,6 +734,17 @@ function FragmentoGrupo({
                 </select>
               ) : (
                 <StatusBadge status={r.status} dataVencimento={r.data_vencimento} />
+              )}
+              {alerta && (
+                <span
+                  className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[11px] font-bold ${
+                    alerta.tipo === 'vencido'
+                      ? 'bg-red-100 text-red-700 ring-1 ring-red-200'
+                      : 'bg-amber-100 text-amber-700 ring-1 ring-amber-200'
+                  }`}
+                >
+                  ⏰ {alerta.label}
+                </span>
               )}
               {Array.isArray(r.anexos) && r.anexos.length > 0 && (
                 <button
