@@ -1,6 +1,5 @@
 /**
- * Pílulas de filtro por status (como na Visão geral), para a tela principal.
- * Ligadas ao mesmo `filtroStatus` dos cartões.
+ * Filtro por status em controle segmentado (fundo cinza, ativo colorido).
  */
 export default function StatusTabs({ filtroStatus, setFiltroStatus, resumo }) {
   const itens = [
@@ -19,7 +18,7 @@ export default function StatusTabs({ filtroStatus, setFiltroStatus, resumo }) {
   }
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-1 rounded-xl bg-slate-100 p-1">
       {itens.map((i) => {
         const ativo = filtroStatus === i.chave
         return (
@@ -28,13 +27,12 @@ export default function StatusTabs({ filtroStatus, setFiltroStatus, resumo }) {
             type="button"
             onClick={() => setFiltroStatus(i.chave)}
             className={[
-              'rounded-full px-4 py-2 text-sm font-semibold transition active:scale-95',
-              ativo
-                ? i.ativo + ' shadow-sm'
-                : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50',
+              'rounded-lg px-4 py-1.5 text-sm font-semibold transition active:scale-95',
+              ativo ? i.ativo + ' shadow-sm' : 'text-slate-600 hover:text-slate-900',
             ].join(' ')}
           >
-            {i.rotulo} <span className={ativo ? 'opacity-90' : 'text-slate-400'}>({i.qtd})</span>
+            {i.rotulo}{' '}
+            <span className={ativo ? 'opacity-90' : 'text-slate-400'}>({i.qtd})</span>
           </button>
         )
       })}

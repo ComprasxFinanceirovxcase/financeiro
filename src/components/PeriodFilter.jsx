@@ -1,18 +1,18 @@
 import { abrevMes } from '../lib/format.js'
 
-/** Pílula clicável (alvo grande, bom para toque). */
-function Pilula({ ativo, suave, onClick, children }) {
+/** Botão de um controle segmentado. */
+function Seg({ ativo, suave, onClick, children }) {
   return (
     <button
       type="button"
       onClick={onClick}
       className={[
-        'relative select-none whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition active:scale-95',
+        'rounded-lg px-3 py-1.5 text-sm font-semibold transition active:scale-95',
         ativo
-          ? 'bg-marca-700 text-white shadow-sm'
+          ? 'bg-white text-marca-700 shadow-sm'
           : suave
-            ? 'bg-white text-slate-400 ring-1 ring-slate-200 hover:bg-slate-50'
-            : 'bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50',
+            ? 'text-slate-300 hover:text-slate-500'
+            : 'text-slate-500 hover:text-slate-800',
       ].join(' ')}
     >
       {children}
@@ -21,18 +21,8 @@ function Pilula({ ativo, suave, onClick, children }) {
 }
 
 /**
- * Barra de filtro por ano e por mês, totalmente tocável.
- * Mostra os 12 meses; os que não têm lançamento ficam em tom suave
- * (mas continuam clicáveis — é onde você lança manualmente depois).
- *
- * @param {{
- *   anos: string[],
- *   anoAtivo: string,
- *   aoSelecionarAno: Function,
- *   mesesComDados: number[],   // números de mês (1..12) que têm lançamentos no ano
- *   mesAtivo: string,          // '' = todos, ou 'YYYY-MM'
- *   aoSelecionarMes: Function,
- * }} props
+ * Filtro por ano e por mês em controle segmentado.
+ * Mostra os 12 meses; os sem lançamento ficam em tom suave (mas clicáveis).
  */
 export default function PeriodFilter({
   anos,
@@ -48,37 +38,42 @@ export default function PeriodFilter({
   return (
     <div className="space-y-2">
       {anos.length > 1 && (
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="w-10 text-xs font-medium uppercase tracking-wide text-slate-400">
+        <div className="flex items-center gap-2">
+          <span className="w-10 shrink-0 text-xs font-semibold uppercase tracking-wide text-slate-400">
             Ano
           </span>
-          {anos.map((ano) => (
-            <Pilula key={ano} ativo={ano === anoAtivo} onClick={() => aoSelecionarAno(ano)}>
-              {ano}
-            </Pilula>
-          ))}
+          <div className="flex flex-wrap gap-1 rounded-xl bg-slate-100 p-1">
+            {anos.map((ano) => (
+              <Seg key={ano} ativo={ano === anoAtivo} onClick={() => aoSelecionarAno(ano)}>
+                {ano}
+              </Seg>
+            ))}
+          </div>
         </div>
       )}
 
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="w-10 text-xs font-medium uppercase tracking-wide text-slate-400">Mês</span>
-        <Pilula ativo={mesAtivo === ''} onClick={() => aoSelecionarMes('')}>
-          Todos
-        </Pilula>
-        {todosOsMeses.map((m) => {
-          const valor = `${anoAtivo}-${String(m).padStart(2, '0')}`
-          const temDados = comDados.has(m)
-          return (
-            <Pilula
-              key={valor}
-              ativo={mesAtivo === valor}
-              suave={!temDados}
-              onClick={() => aoSelecionarMes(valor)}
-            >
-              {abrevMes(m)}
-            </Pilula>
-          )
-        })}
+      <div className="flex items-center gap-2">
+        <span className="w-10 shrink-0 text-xs font-semibold uppercase tracking-wide text-slate-400">
+          Mês
+        </span>
+        <div className="flex flex-wrap gap-1 rounded-xl bg-slate-100 p-1">
+          <Seg ativo={mesAtivo === ''} onClick={() => aoSelecionarMes('')}>
+            Todos
+          </Seg>
+          {todosOsMeses.map((m) => {
+            const valor = `${anoAtivo}-${String(m).padStart(2, '0')}`
+            return (
+              <Seg
+                key={valor}
+                ativo={mesAtivo === valor}
+                suave={!comDados.has(m)}
+                onClick={() => aoSelecionarMes(valor)}
+              >
+                {abrevMes(m)}
+              </Seg>
+            )
+          })}
+        </div>
       </div>
     </div>
   )
