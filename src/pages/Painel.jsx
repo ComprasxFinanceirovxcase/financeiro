@@ -17,6 +17,7 @@ import { montarSugestoes } from '../lib/opcoes.js'
 import { CAMPOS_SOLICITACOES } from '../lib/camposConfig.js'
 import StatusBadge from '../components/StatusBadge.jsx'
 import LancamentoModal from '../components/LancamentoModal.jsx'
+import RelatorioMensal from '../components/RelatorioMensal.jsx'
 
 function resumirPorStatus(registros) {
   const r = {
@@ -82,6 +83,7 @@ export default function Painel() {
 
   const [aba, setAba] = useState('pendente')
   const [subPendente, setSubPendente] = useState('todos') // 'todos' | 'prontos' | 'falta'
+  const [vista, setVista] = useState('pedidos') // 'pedidos' | 'relatorio'
   const [emEdicao, setEmEdicao] = useState(null)
   const [modalAberto, setModalAberto] = useState(false)
 
@@ -280,6 +282,38 @@ export default function Painel() {
         )}
       </div>
 
+      {/* Sub-tópicos da Visão geral */}
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => setVista('pedidos')}
+          className={[
+            'rounded-full px-4 py-2 text-sm font-semibold transition active:scale-95',
+            vista === 'pedidos'
+              ? 'bg-marca-700 text-white shadow-sm'
+              : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50',
+          ].join(' ')}
+        >
+          📋 Pedidos
+        </button>
+        <button
+          type="button"
+          onClick={() => setVista('relatorio')}
+          className={[
+            'rounded-full px-4 py-2 text-sm font-semibold transition active:scale-95',
+            vista === 'relatorio'
+              ? 'bg-marca-700 text-white shadow-sm'
+              : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50',
+          ].join(' ')}
+        >
+          📊 Relatório mensal
+        </button>
+      </div>
+
+      {vista === 'relatorio' ? (
+        <RelatorioMensal registrosSol={sol.registros} registrosFun={fun.registros} />
+      ) : (
+        <>
       {/* Indicadores (separados, sem misturar pago com pendente) */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Cartao
@@ -379,6 +413,8 @@ export default function Painel() {
           </div>
         )}
       </div>
+        </>
+      )}
 
       {podeEditar && (
         <LancamentoModal
