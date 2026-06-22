@@ -42,15 +42,12 @@ function Celula({ r, c }) {
   const principal = valorBruto(r, c.chave, c.tipo)
   const sub = montarSub(r, c.sub, c.subTipo, c.subRotulo)
   const sub2 = montarSub(r, c.sub2, c.sub2Tipo, c.sub2Rotulo)
+  const classePrincipal =
+    c.principalClasse ||
+    (c.tipo === 'moeda' ? 'font-semibold tabular-nums text-slate-800' : 'text-slate-800')
   return (
     <>
-      <span
-        className={
-          c.tipo === 'moeda' ? 'font-semibold tabular-nums text-slate-800' : 'text-slate-800'
-        }
-      >
-        {principal}
-      </span>
+      <span className={classePrincipal}>{principal}</span>
       {sub && (
         <span className={`mt-0.5 block truncate text-xs ${c.subClasse || 'text-slate-400'}`}>{sub}</span>
       )}
@@ -473,11 +470,19 @@ export default function TelaLancamentos({
                 const s = situacaoVencimento(r.status, r.data_vencimento)
                 const subProduto =
                   colProduto?.sub ? valorBruto(r, colProduto.sub, colProduto.subTipo) : null
+                const corBordaM = r.prioridade
+                  ? 'border-l-4 border-l-red-500'
+                  : {
+                      pendente: 'border-l-4 border-l-amber-400',
+                      enviado: 'border-l-4 border-l-blue-400',
+                      pago: 'border-l-4 border-l-emerald-400',
+                      reembolsado: 'border-l-4 border-l-violet-400',
+                    }[grupoStatus(r.status)] || ''
                 return (
                   <div
                     key={r.id}
                     onClick={() => podeEditar && abrirEdicao(r)}
-                    className={`rounded-xl border border-slate-200 bg-white p-4 shadow-sm ${s.classeLinha} ${r.prioridade ? 'border-l-4 border-l-red-500' : ''} ${podeEditar ? 'cursor-pointer active:scale-[0.99]' : ''}`}
+                    className={`rounded-xl border border-slate-200 bg-white p-4 shadow-sm ${s.classeLinha} ${corBordaM} ${podeEditar ? 'cursor-pointer active:scale-[0.99]' : ''}`}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
@@ -660,18 +665,27 @@ function FragmentoGrupo({
       </tr>
       {grupo.rows.map((r) => {
         const s = situacaoVencimento(r.status, r.data_vencimento)
+        const g = grupoStatus(r.status)
         const corSel =
           {
             pendente: 'border-amber-300 bg-amber-50 text-amber-800',
             enviado: 'border-blue-300 bg-blue-50 text-blue-800',
             pago: 'border-emerald-300 bg-emerald-50 text-emerald-800',
             reembolsado: 'border-violet-300 bg-violet-50 text-violet-800',
-          }[grupoStatus(r.status)] || 'border-slate-200 bg-white'
+          }[g] || 'border-slate-200 bg-white'
+        const corBorda = r.prioridade
+          ? 'border-l-4 border-red-500'
+          : {
+              pendente: 'border-l-4 border-amber-400',
+              enviado: 'border-l-4 border-blue-400',
+              pago: 'border-l-4 border-emerald-400',
+              reembolsado: 'border-l-4 border-violet-400',
+            }[g] || ''
         return (
           <tr
             key={r.id}
             onClick={() => podeEditar && onEditar(r)}
-            className={`${s.classeLinha} ${r.prioridade ? 'border-l-4 border-red-500' : ''} ${
+            className={`${s.classeLinha} ${corBorda} ${
               podeEditar ? 'cursor-pointer' : ''
             } transition hover:bg-marca-50/40`}
           >

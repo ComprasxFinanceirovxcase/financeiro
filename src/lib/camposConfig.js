@@ -5,7 +5,13 @@
 // para caber tudo na tela sem rolar.
 export const COLUNAS_SOLICITACOES = [
   { chave: 'data', rotulo: 'Data', tipo: 'data', sub: 'data_vencimento', subTipo: 'data', subRotulo: '📅 Pagar em', subClasse: 'text-blue-600 font-semibold' },
-  { chave: 'produto', rotulo: 'Produto', sub: 'fornecedor', className: 'min-w-[12rem] max-w-[20rem]' },
+  {
+    chave: 'produto',
+    rotulo: 'Produto',
+    sub: 'fornecedor',
+    principalClasse: 'font-semibold text-slate-800',
+    className: 'min-w-[12rem] max-w-[20rem]',
+  },
   { chave: 'valor_total', rotulo: 'Valor', tipo: 'moeda', sub: 'forma_pagamento' },
   {
     chave: 'empresa',
@@ -42,7 +48,13 @@ export const CAMPOS_SOLICITACOES = [
 
 export const COLUNAS_FUNDO = [
   { chave: 'data', rotulo: 'Data', tipo: 'data' },
-  { chave: 'produto', rotulo: 'Produto', sub: 'detalhamento', className: 'min-w-[12rem] max-w-[22rem]' },
+  {
+    chave: 'produto',
+    rotulo: 'Produto',
+    sub: 'detalhamento',
+    principalClasse: 'font-semibold text-slate-800',
+    className: 'min-w-[12rem] max-w-[22rem]',
+  },
   { chave: 'valor_total', rotulo: 'Valor', tipo: 'moeda', sub: 'forma_pagamento' },
   { chave: 'conta_pagamento', rotulo: 'Responsável', sub: 'fornecedor', className: 'max-w-[12rem]' },
 ]
