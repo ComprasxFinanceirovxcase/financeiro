@@ -400,7 +400,7 @@ export default function Painel() {
             Nenhum pedido nesta situação.
           </div>
         ) : (
-          <div className="max-h-[34rem] space-y-2 overflow-y-auto scroll-suave pr-1">
+          <div className="space-y-3">
             {lista.map((r) => (
               <PedidoItem
                 key={r.id}
@@ -454,14 +454,14 @@ function PedidoItem({ r, aba, podeEditar, onClick, onCobrar, onStatus }) {
       onClick={podeEditar ? onClick : undefined}
       role={podeEditar ? 'button' : undefined}
       className={[
-        'block w-full rounded-xl border border-slate-200 bg-white p-3 text-left shadow-sm',
+        'block w-full rounded-xl border border-slate-200 bg-white p-4 text-left shadow-sm',
         corBorda,
         podeEditar ? 'cursor-pointer transition hover:shadow active:scale-[0.99]' : '',
       ].join(' ')}
     >
       {/* Linha 1: produto + valor */}
       <div className="flex items-start justify-between gap-3">
-        <p className="min-w-0 truncate font-bold text-slate-900">
+        <p className="min-w-0 truncate text-base font-bold text-slate-900">
           {r.prioridade && <span className="mr-1 text-red-600">🔴</span>}
           {r.produto || '—'}
         </p>
@@ -471,7 +471,7 @@ function PedidoItem({ r, aba, podeEditar, onClick, onCobrar, onStatus }) {
       </div>
 
       {/* Linha 2: infos compactas (só as preenchidas) */}
-      <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-slate-500">
+      <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[13px] text-slate-500">
         <span className="text-slate-400">🗓 {formatarData(r.data)}</span>
         {r.fornecedor && <span>🏪 {r.fornecedor}</span>}
         {r.empresa && <span>👤 {r.empresa}</span>}
