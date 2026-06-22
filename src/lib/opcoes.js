@@ -116,6 +116,9 @@ const NORMALIZADORES = {
   cidade_estado: normalizarCidadeEstado,
 }
 
+// Valores que nunca devem aparecer como sugestão (por chave canônica).
+const EXCLUIR = new Set(['brunon'])
+
 // Chave para comparar valores ignorando acento, maiúsculas, espaços e pontuação.
 // "DELL" e "Dell", "PF IGOR" e "PF - Igor", "Flex form" e "Flexform" => mesma chave.
 function chaveCanonica(v) {
@@ -140,10 +143,12 @@ export function montarSugestoes(nomeCampo, registros) {
     if (bruto === null || bruto === undefined) return
     let s = String(bruto).trim()
     if (!s || s === '-') return
+    if (/\bGMT\b/i.test(s) || /horário/i.test(s)) return // lixo de data/hora
     if (norm) s = norm(s)
     if (!s) return
     const k = chaveCanonica(s)
-    if (k && !mapa.has(k)) mapa.set(k, s)
+    if (!k || EXCLUIR.has(k) || mapa.has(k)) return
+    mapa.set(k, s)
   }
 
   // Ordem de preferência: curada > planilha > dados já lançados
