@@ -205,30 +205,7 @@ export default function Painel() {
     return l.join('\n')
   }
 
-  // Mensagem 2: cobrança enxuta
-  function msgEnxuta() {
-    const faltam = ordenarUrgentes(porStatus.pendente.filter((r) => !pedidoCompleto(r)))
-    const l = []
-    l.push('*💰 FINANCEIRO · COMPRAS*')
-    l.push('')
-    if (!faltam.length) {
-      l.push('✅ Tudo certo! Nenhum pedido pendente de definição.')
-      return l.join('\n')
-    }
-    l.push('Olá! 👋 Os pedidos abaixo precisam ser definidos para irem ao pagamento:')
-    l.push('')
-    faltam.forEach((r, i) => l.push(linhaItemWhats(r, i + 1)))
-    const tot = faltam.reduce((s, r) => s + (Number(r.valor_total) || 0), 0)
-    l.push('')
-    l.push(`*Total: ${faltam.length} pedido(s) · ${formatarMoeda(tot)}*`)
-    l.push('')
-    l.push(...blocoFalta())
-    l.push('')
-    l.push('Conseguem definir, por favor? 🙏')
-    return l.join('\n')
-  }
-
-  // Mensagem 3: cobrança de um pedido específico
+  // Mensagem: cobrança de um pedido específico (individual)
   function msgItem(r) {
     const l = []
     l.push('*💰 FINANCEIRO · COMPRAS*')
@@ -267,20 +244,12 @@ export default function Painel() {
           </p>
         </div>
         {podeEditar && (
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => abrirWhats(msgResumo())}
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600 active:scale-95"
-            >
-              <span className="text-base leading-none">📲</span> Avisar (resumo)
-            </button>
-            <button
-              onClick={() => abrirWhats(msgEnxuta())}
-              className="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-500 bg-white px-4 py-2.5 text-sm font-semibold text-emerald-600 shadow-sm transition hover:bg-emerald-50 active:scale-95"
-            >
-              <span className="text-base leading-none">⚠️</span> Cobrar pendências
-            </button>
-          </div>
+          <button
+            onClick={() => abrirWhats(msgResumo())}
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600 active:scale-95"
+          >
+            <span className="text-base leading-none">📲</span> Avisar no WhatsApp (resumo)
+          </button>
         )}
       </div>
 
