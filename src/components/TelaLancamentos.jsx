@@ -276,7 +276,7 @@ export default function TelaLancamentos({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-xl font-bold text-slate-800">{titulo}</h2>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-500 txt-canvas-muted">
             Atualiza em tempo real para todos os usuários conectados.
           </p>
         </div>

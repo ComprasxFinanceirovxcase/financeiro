@@ -1,6 +1,40 @@
 import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
+import { useTheme, TEMAS } from '../context/ThemeContext.jsx'
+
+function SeletorTema() {
+  const { tema, setTema } = useTheme()
+  return (
+    <div className="rounded-lg bg-white/5 p-1">
+      <p className="px-2 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-wider text-marca-100/50">
+        Tema
+      </p>
+      <div className="flex gap-1">
+        {TEMAS.map((t) => {
+          const ativo = tema === t.chave
+          return (
+            <button
+              key={t.chave}
+              type="button"
+              onClick={() => setTema(t.chave)}
+              title={t.rotulo}
+              className={[
+                'flex flex-1 flex-col items-center gap-0.5 rounded-md px-1 py-1.5 text-[11px] font-medium transition',
+                ativo
+                  ? 'bg-white/20 text-white shadow-sm ring-1 ring-white/30'
+                  : 'text-marca-100/70 hover:bg-white/10 hover:text-white',
+              ].join(' ')}
+            >
+              <span className="text-base leading-none">{t.icone}</span>
+              {t.rotulo}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
 
 function linkClasse({ isActive }) {
   return [
@@ -48,7 +82,8 @@ export default function Layout({ children }) {
         ))}
       </nav>
 
-      <div className="border-t border-white/10 p-3">
+      <div className="space-y-2 border-t border-white/10 p-3">
+        <SeletorTema />
         <button
           onClick={aoSair}
           className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-marca-100/80 transition hover:bg-white/10 hover:text-white"
@@ -61,7 +96,7 @@ export default function Layout({ children }) {
   )
 
   return (
-    <div className="flex min-h-screen bg-slate-100">
+    <div className="flex min-h-screen bg-[color:var(--canvas)]">
       {/* Sidebar fixa (desktop) */}
       <div className="sticky top-0 hidden h-screen shrink-0 md:block">{conteudoSidebar}</div>
 

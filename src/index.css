@@ -10,8 +10,41 @@ body,
   height: 100%;
 }
 
+/* ===== Temas (fundo/texto do "canvas" — os cards continuam claros) ===== */
+:root,
+[data-tema='claro'] {
+  --canvas: #f1f5f9; /* slate-100 */
+  --ink: #1e293b; /* slate-800 */
+  --ink-muted: #64748b; /* slate-500 */
+}
+[data-tema='medio'] {
+  --canvas: #334155; /* slate-700 */
+  --ink: #f1f5f9;
+  --ink-muted: #cbd5e1; /* slate-300 */
+}
+[data-tema='escuro'] {
+  --canvas: #0b1120; /* quase preto azulado */
+  --ink: #e2e8f0; /* slate-200 */
+  --ink-muted: #94a3b8; /* slate-400 */
+}
+
 body {
-  @apply bg-slate-100 text-slate-800 antialiased;
+  @apply antialiased;
+  background-color: var(--canvas);
+  color: var(--ink);
+}
+
+/* Títulos/seções ficam sobre o canvas — acompanham o tema.
+   (Os cards usam <p>, então não são afetados.) */
+[data-tema] h1,
+[data-tema] h2,
+[data-tema] h3 {
+  color: var(--ink);
+}
+
+/* Texto secundário direto no canvas (subtítulos) */
+.txt-canvas-muted {
+  color: var(--ink-muted) !important;
 }
 
 /* Esconde a barra de rolagem horizontal feia em tabelas no mobile, mantendo o scroll */

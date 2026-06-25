@@ -214,7 +214,7 @@ export default function Painel() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="text-xl font-bold text-slate-800">Visão geral</h2>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-500 txt-canvas-muted">
             Tudo o que está pendente, enviado e pago — Solicitações e Fundo de Caixa juntos.
           </p>
         </div>
