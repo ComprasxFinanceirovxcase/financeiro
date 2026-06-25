@@ -377,106 +377,82 @@ export default function Painel() {
   )
 }
 
-/** Linha rótulo + valor da ficha do pedido. Mostra "—" quando vazio. */
-function Campo({ rotulo, valor, faltando, destaque }) {
-  return (
-    <div className="flex flex-col">
-      <dt className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">{rotulo}</dt>
-      <dd
-        className={[
-          'break-words text-[13px] font-medium',
-          faltando ? 'text-red-500' : destaque ? 'text-blue-700' : valor ? 'text-slate-700' : 'text-slate-300',
-        ].join(' ')}
-      >
-        {valor || (faltando ? 'a definir' : '—')}
-      </dd>
-    </div>
-  )
-}
-
-/** Cartão corporativo: cabeçalho, ficha completa de informações e rodapé de ação. */
+/** Item de pedido com fornecedor, valor, PF/CNPJ e data bem visíveis + o que falta. */
 function PedidoItem({ r, aba, podeEditar, onClick, onStatus }) {
   const falta = pendenciasPagamento(r)
   const pronto = falta.length === 0
   const g = grupoStatus(r.status)
   const alerta = alertaVencimento(r)
-  const faltaPfCnpj = !r.empresa && !r.cnpj_cpf
-  const faltaData = !r.data_vencimento
   const corBorda = r.prioridade
-    ? 'border-l-[3px] border-l-red-500'
+    ? 'border-l-4 border-l-red-500'
     : {
-        pendente: 'border-l-[3px] border-l-amber-400',
-        enviado: 'border-l-[3px] border-l-blue-500',
-        pago: 'border-l-[3px] border-l-emerald-500',
-        reembolsado: 'border-l-[3px] border-l-violet-400',
-      }[g] || 'border-l-[3px] border-l-slate-200'
+        pendente: 'border-l-4 border-l-amber-400',
+        enviado: 'border-l-4 border-l-blue-400',
+        pago: 'border-l-4 border-l-emerald-400',
+        reembolsado: 'border-l-4 border-l-violet-400',
+      }[g] || 'border-slate-200'
 
   return (
     <div
       onClick={podeEditar ? onClick : undefined}
       role={podeEditar ? 'button' : undefined}
       className={[
-        'flex h-full flex-col rounded-xl border border-slate-200 bg-white text-left shadow-sm',
+        'block w-full rounded-xl border border-slate-200 bg-white p-4 text-left shadow-sm',
         corBorda,
-        podeEditar ? 'cursor-pointer transition hover:border-slate-300 hover:shadow-md active:scale-[0.995]' : '',
+        podeEditar ? 'cursor-pointer transition hover:shadow active:scale-[0.99]' : '',
       ].join(' ')}
     >
-      {/* Cabeçalho: produto + valor + status */}
-      <div className="border-b border-slate-100 px-4 pb-3 pt-3.5">
-        <div className="flex items-start justify-between gap-3">
-          <p className="min-w-0 flex-1 text-[15px] font-bold leading-snug text-slate-900">
-            {r.prioridade && <span className="mr-1 align-middle text-red-600">🔴</span>}
-            {r.produto || '—'}
-          </p>
-          <p className="whitespace-nowrap text-lg font-extrabold tabular-nums text-slate-900">
-            {formatarMoeda(r.valor_total)}
-          </p>
-        </div>
-        <div className="mt-2 flex flex-wrap items-center gap-1.5">
-          <StatusBadge status={r.status} dataVencimento={r.data_vencimento} />
-          {r.forma_pagamento && (
-            <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
-              {r.forma_pagamento}
-            </span>
-          )}
-          {alerta && (
-            <span
-              className={`rounded-md px-2 py-0.5 text-[11px] font-bold ${
-                alerta.tipo === 'vencido'
-                  ? 'bg-red-100 text-red-700 ring-1 ring-red-200'
-                  : 'bg-amber-100 text-amber-700 ring-1 ring-amber-200'
-              }`}
-            >
-              ⏰ {alerta.label}
-            </span>
-          )}
-          {Array.isArray(r.anexos) && r.anexos.length > 0 && (
-            <span className="rounded-md bg-marca-50 px-2 py-0.5 text-[11px] font-semibold text-marca-700">
-              📎 {r.anexos.length}
-            </span>
-          )}
-        </div>
+      {/* Linha 1: produto + valor */}
+      <div className="flex items-start justify-between gap-3">
+        <p className="min-w-0 truncate text-base font-bold text-slate-900">
+          {r.prioridade && <span className="mr-1 text-red-600">🔴</span>}
+          {r.produto || '—'}
+        </p>
+        <p className="whitespace-nowrap text-lg font-extrabold tabular-nums text-slate-900">
+          {formatarMoeda(r.valor_total)}
+        </p>
       </div>
 
-      {/* Ficha de informações */}
-      <dl className="grid grid-cols-2 gap-x-4 gap-y-2.5 px-4 py-3">
-        <Campo rotulo="Lançamento" valor={formatarData(r.data)} />
-        <Campo rotulo="Pagar em" valor={r.data_vencimento ? formatarData(r.data_vencimento) : null} faltando={faltaData} destaque />
-        <Campo rotulo="Fornecedor" valor={r.fornecedor} />
-        <Campo rotulo="Pago por (PF/CNPJ)" valor={r.empresa} faltando={faltaPfCnpj} />
-        <Campo rotulo="Documento (NF)" valor={r.cnpj_cpf} />
-        <Campo rotulo="Quem paga" valor={r.pagador} />
-        {r.codigo_glpi && <Campo rotulo="GLPI" valor={r.codigo_glpi} />}
-      </dl>
+      {/* Linha 2: infos compactas (só as preenchidas) */}
+      <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[13px] text-slate-500">
+        <span className="text-slate-400">🗓 {formatarData(r.data)}</span>
+        {r.fornecedor && <span>🏪 {r.fornecedor}</span>}
+        {r.empresa && <span>👤 {r.empresa}</span>}
+        {r.pagador && <span>👩 {r.pagador}</span>}
+        {r.data_vencimento && (
+          <span className="font-semibold text-blue-600">📅 {formatarData(r.data_vencimento)}</span>
+        )}
+        {r.codigo_glpi && <span>🔖 {r.codigo_glpi}</span>}
+        {Array.isArray(r.anexos) && r.anexos.length > 0 && (
+          <span className="text-marca-700">📎 {r.anexos.length}</span>
+        )}
+      </div>
 
-      {/* Rodapé: pendência + ação */}
-      {(aba === 'pendente' || aba === 'enviado') && (
-        <div className="mt-auto flex flex-wrap items-center gap-2 border-t border-slate-100 px-4 py-2.5">
-          {aba === 'pendente' &&
-            (pronto ? (
+      {/* Linha 3: status + o que falta / ação */}
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <StatusBadge status={r.status} dataVencimento={r.data_vencimento} />
+        {alerta && (
+          <span
+            className={`rounded-full px-2 py-0.5 text-xs font-bold ${
+              alerta.tipo === 'vencido'
+                ? 'bg-red-100 text-red-700 ring-1 ring-red-200'
+                : 'bg-amber-100 text-amber-700 ring-1 ring-amber-200'
+            }`}
+          >
+            ⏰ {alerta.label}
+          </span>
+        )}
+        {r.forma_pagamento && (
+          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+            {r.forma_pagamento}
+          </span>
+        )}
+        {aba === 'pendente' && (
+          <div className="ml-auto flex items-center gap-2">
+            {pronto ? (
               <>
-                <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 ring-1 ring-emerald-200">
-                  ✓ Pronto p/ enviar
+                <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
+                  ✓ pronto
                 </span>
                 {podeEditar && (
                   <button
@@ -484,31 +460,32 @@ function PedidoItem({ r, aba, podeEditar, onClick, onStatus }) {
                       e.stopPropagation()
                       onStatus('Enviado')
                     }}
-                    className="ml-auto inline-flex items-center gap-1 whitespace-nowrap rounded-md bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-blue-700 active:scale-95"
+                    className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-blue-600 px-3 py-1 text-xs font-semibold text-white transition hover:bg-blue-700 active:scale-95"
                   >
                     Enviar p/ pagamento →
                   </button>
                 )}
               </>
             ) : (
-              <span className="rounded-md bg-amber-50 px-2.5 py-0.5 text-[11px] font-semibold text-amber-700 ring-1 ring-amber-200">
-                ⏳ Falta: {falta.join(' · ')}
+              <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700 ring-1 ring-amber-200">
+                Falta: {falta.join(' · ')}
               </span>
-            ))}
+            )}
+          </div>
+        )}
 
-          {aba === 'enviado' && podeEditar && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                onStatus('Pago')
-              }}
-              className="ml-auto inline-flex items-center gap-1 whitespace-nowrap rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-700 active:scale-95"
-            >
-              💰 Marcar como pago
-            </button>
-          )}
-        </div>
-      )}
+        {aba === 'enviado' && podeEditar && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              onStatus('Pago')
+            }}
+            className="ml-auto inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-emerald-600 px-3 py-1 text-xs font-semibold text-white transition hover:bg-emerald-700 active:scale-95"
+          >
+            💰 Marcar como pago
+          </button>
+        )}
+      </div>
     </div>
   )
 }
