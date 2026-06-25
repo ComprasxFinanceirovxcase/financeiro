@@ -344,17 +344,34 @@ export default function Painel() {
             Nenhum pedido nesta situação.
           </div>
         ) : (
-          <div className="grid grid-cols-1 items-start gap-3 md:grid-cols-2 2xl:grid-cols-3">
-            {lista.map((r) => (
-              <PedidoItem
-                key={r.id}
-                r={r}
-                aba={aba}
-                podeEditar={podeEditar}
-                onClick={() => abrirDefinicao(r)}
-                onStatus={(novo) => mudarStatus(r, novo)}
-              />
-            ))}
+          <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+            <div className="overflow-x-auto scroll-suave">
+              <table className="min-w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                    <th className="px-4 py-3 font-semibold">Data</th>
+                    <th className="px-4 py-3 font-semibold">Produto</th>
+                    <th className="px-4 py-3 font-semibold">Status</th>
+                    <th className="px-4 py-3 font-semibold">Pago por</th>
+                    <th className="px-4 py-3 font-semibold">Vencimento</th>
+                    <th className="px-4 py-3 text-right font-semibold">Valor (R$)</th>
+                    <th className="px-4 py-3 text-center font-semibold">Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {lista.map((r) => (
+                    <LinhaPedido
+                      key={r.id}
+                      r={r}
+                      aba={aba}
+                      podeEditar={podeEditar}
+                      onClick={() => abrirDefinicao(r)}
+                      onStatus={(novo) => mudarStatus(r, novo)}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>
@@ -377,139 +394,127 @@ export default function Painel() {
   )
 }
 
-/** Linha rótulo + valor da ficha do pedido. Mostra "—" quando vazio. */
-function Campo({ rotulo, valor, faltando, destaque }) {
-  return (
-    <div className="flex flex-col">
-      <dt className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">{rotulo}</dt>
-      <dd
-        className={[
-          'truncate text-[13px] font-medium tabular-nums',
-          faltando ? 'text-red-500' : destaque ? 'text-blue-700' : valor ? 'text-slate-700' : 'text-slate-300',
-        ].join(' ')}
-        title={valor || ''}
-      >
-        {valor || (faltando ? 'a definir' : '—')}
-      </dd>
-    </div>
-  )
-}
-
-/** Cartão corporativo: cabeçalho, ficha completa de informações e rodapé de ação. */
-function PedidoItem({ r, aba, podeEditar, onClick, onStatus }) {
+/** Linha da tabela de pedidos (layout enxuto, estilo planilha). */
+function LinhaPedido({ r, aba, podeEditar, onClick, onStatus }) {
   const falta = pendenciasPagamento(r)
   const pronto = falta.length === 0
-  const g = grupoStatus(r.status)
   const alerta = alertaVencimento(r)
-  const faltaPfCnpj = !r.empresa && !r.cnpj_cpf
-  const faltaData = !r.data_vencimento
-  const corBorda = r.prioridade
-    ? 'border-l-[3px] border-l-red-500'
-    : {
-        pendente: 'border-l-[3px] border-l-amber-400',
-        enviado: 'border-l-[3px] border-l-blue-500',
-        pago: 'border-l-[3px] border-l-emerald-500',
-        reembolsado: 'border-l-[3px] border-l-violet-400',
-      }[g] || 'border-l-[3px] border-l-slate-200'
+  const pagoPor = r.empresa || r.cnpj_cpf
 
   return (
-    <div
+    <tr
       onClick={podeEditar ? onClick : undefined}
-      role={podeEditar ? 'button' : undefined}
       className={[
-        'flex h-full flex-col rounded-xl border border-slate-200 bg-white text-left shadow-sm',
-        corBorda,
-        podeEditar ? 'cursor-pointer transition hover:border-slate-300 hover:shadow-md active:scale-[0.995]' : '',
+        'border-b border-slate-100 align-middle transition last:border-0',
+        podeEditar ? 'cursor-pointer hover:bg-slate-50' : '',
+        r.prioridade ? 'bg-red-50/50' : '',
       ].join(' ')}
     >
-      {/* Cabeçalho: produto + valor + status */}
-      <div className="border-b border-slate-100 px-4 pb-3 pt-3.5">
-        <div className="flex items-start justify-between gap-3">
-          <p className="min-w-0 flex-1 text-[15px] font-bold leading-snug text-slate-900">
-            {r.prioridade && <span className="mr-1 align-middle text-red-600">🔴</span>}
+      {/* Data */}
+      <td className="whitespace-nowrap px-4 py-3 text-slate-500">{formatarData(r.data)}</td>
+
+      {/* Produto (+ fornecedor / anexos) */}
+      <td className="px-4 py-3">
+        <div className="flex items-center gap-1.5 font-semibold text-marca-700">
+          {r.prioridade && <span className="text-red-600">🔴</span>}
+          <span className="block max-w-[16rem] truncate" title={r.produto || ''}>
             {r.produto || '—'}
-          </p>
-          <p className="whitespace-nowrap text-lg font-extrabold tabular-nums text-slate-900">
-            {formatarMoeda(r.valor_total)}
-          </p>
+          </span>
         </div>
-        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+        {(r.fornecedor || (Array.isArray(r.anexos) && r.anexos.length > 0)) && (
+          <div className="mt-0.5 flex items-center gap-2 text-xs text-slate-400">
+            {r.fornecedor && <span className="truncate">🏪 {r.fornecedor}</span>}
+            {Array.isArray(r.anexos) && r.anexos.length > 0 && (
+              <span className="text-marca-700">📎 {r.anexos.length}</span>
+            )}
+          </div>
+        )}
+      </td>
+
+      {/* Status (+ falta / alerta) */}
+      <td className="whitespace-nowrap px-4 py-3">
+        <div className="flex flex-col items-start gap-1">
           <StatusBadge status={r.status} dataVencimento={r.data_vencimento} />
-          {r.forma_pagamento && (
-            <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
-              {r.forma_pagamento}
-            </span>
+          {aba === 'pendente' && !pronto && (
+            <span className="text-[11px] font-semibold text-amber-600">⏳ Falta: {falta.join(' · ')}</span>
           )}
           {alerta && (
             <span
-              className={`rounded-md px-2 py-0.5 text-[11px] font-bold ${
-                alerta.tipo === 'vencido'
-                  ? 'bg-red-100 text-red-700 ring-1 ring-red-200'
-                  : 'bg-amber-100 text-amber-700 ring-1 ring-amber-200'
+              className={`text-[11px] font-bold ${
+                alerta.tipo === 'vencido' ? 'text-red-600' : 'text-amber-600'
               }`}
             >
               ⏰ {alerta.label}
             </span>
           )}
-          {Array.isArray(r.anexos) && r.anexos.length > 0 && (
-            <span className="rounded-md bg-marca-50 px-2 py-0.5 text-[11px] font-semibold text-marca-700">
-              📎 {r.anexos.length}
-            </span>
-          )}
         </div>
-      </div>
+      </td>
 
-      {/* Ficha de informações */}
-      <dl className="grid grid-cols-2 gap-x-4 gap-y-2.5 px-4 py-3">
-        <Campo rotulo="Lançamento" valor={formatarData(r.data)} />
-        <Campo rotulo="Pagar em" valor={r.data_vencimento ? formatarData(r.data_vencimento) : null} faltando={faltaData} destaque />
-        <Campo rotulo="Fornecedor" valor={r.fornecedor} />
-        <Campo rotulo="Pago por (PF/CNPJ)" valor={r.empresa} faltando={faltaPfCnpj} />
-        <Campo rotulo="Documento (NF)" valor={r.cnpj_cpf} />
-        <Campo rotulo="Quem paga" valor={r.pagador} />
-        {r.codigo_glpi && <Campo rotulo="GLPI" valor={r.codigo_glpi} />}
-      </dl>
+      {/* Pago por (PF/CNPJ) + quem paga */}
+      <td className="whitespace-nowrap px-4 py-3">
+        {pagoPor ? (
+          <span className="text-slate-700">{pagoPor}</span>
+        ) : (
+          <span className="font-medium text-red-500">a definir</span>
+        )}
+        {r.pagador && <div className="text-xs text-slate-400">💳 {r.pagador}</div>}
+      </td>
 
-      {/* Rodapé: pendência + ação */}
-      {(aba === 'pendente' || aba === 'enviado') && (
-        <div className="mt-auto flex flex-wrap items-center gap-2 border-t border-slate-100 px-4 py-2.5">
-          {aba === 'pendente' &&
-            (pronto ? (
-              <>
-                <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 ring-1 ring-emerald-200">
-                  ✓ Pronto p/ enviar
-                </span>
-                {podeEditar && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      onStatus('Enviado')
-                    }}
-                    className="ml-auto inline-flex items-center gap-1 whitespace-nowrap rounded-md bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-blue-700 active:scale-95"
-                  >
-                    Enviar p/ pagamento →
-                  </button>
-                )}
-              </>
-            ) : (
-              <span className="rounded-md bg-amber-50 px-2.5 py-0.5 text-[11px] font-semibold text-amber-700 ring-1 ring-amber-200">
-                ⏳ Falta: {falta.join(' · ')}
-              </span>
-            ))}
+      {/* Vencimento */}
+      <td className="whitespace-nowrap px-4 py-3">
+        {r.data_vencimento ? (
+          <span className="font-medium text-blue-600">{formatarData(r.data_vencimento)}</span>
+        ) : (
+          <span className="font-medium text-red-500">a definir</span>
+        )}
+      </td>
 
-          {aba === 'enviado' && podeEditar && (
+      {/* Valor */}
+      <td className="whitespace-nowrap px-4 py-3 text-right text-[15px] font-bold tabular-nums text-emerald-700">
+        {formatarMoeda(r.valor_total)}
+      </td>
+
+      {/* Ações */}
+      <td className="whitespace-nowrap px-4 py-3">
+        <div className="flex items-center justify-center gap-1.5">
+          {podeEditar && aba === 'pendente' && pronto && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onStatus('Enviado')
+              }}
+              title="Enviar para pagamento"
+              className="whitespace-nowrap rounded-md bg-blue-600 px-2.5 py-1 text-xs font-semibold text-white transition hover:bg-blue-700 active:scale-95"
+            >
+              Enviar →
+            </button>
+          )}
+          {podeEditar && aba === 'enviado' && (
             <button
               onClick={(e) => {
                 e.stopPropagation()
                 onStatus('Pago')
               }}
-              className="ml-auto inline-flex items-center gap-1 whitespace-nowrap rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-700 active:scale-95"
+              title="Marcar como pago"
+              className="whitespace-nowrap rounded-md bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white transition hover:bg-emerald-700 active:scale-95"
             >
-              💰 Marcar como pago
+              💰 Pago
+            </button>
+          )}
+          {podeEditar && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onClick()
+              }}
+              title="Editar / definir"
+              className="rounded-md p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-marca-700"
+            >
+              ✏️
             </button>
           )}
         </div>
-      )}
-    </div>
+      </td>
+    </tr>
   )
 }
