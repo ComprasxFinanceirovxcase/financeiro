@@ -351,6 +351,8 @@ export default function Painel() {
                   <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500">
                     <th className="px-4 py-3 font-semibold">Data</th>
                     <th className="px-4 py-3 font-semibold">Produto</th>
+                    <th className="px-3 py-3 text-center font-semibold">Qtd</th>
+                    <th className="px-4 py-3 font-semibold">Forma pgto</th>
                     <th className="px-4 py-3 font-semibold">Status</th>
                     <th className="px-4 py-3 font-semibold">Pago por</th>
                     <th className="px-4 py-3 font-semibold">Vencimento</th>
@@ -428,6 +430,22 @@ function LinhaPedido({ r, aba, podeEditar, onClick, onStatus }) {
               <span className="text-marca-700">📎 {r.anexos.length}</span>
             )}
           </div>
+        )}
+      </td>
+
+      {/* Quantidade */}
+      <td className="whitespace-nowrap px-3 py-3 text-center tabular-nums text-slate-600">
+        {Number(r.quantidade) > 0 ? r.quantidade : '—'}
+      </td>
+
+      {/* Forma de pagamento */}
+      <td className="whitespace-nowrap px-4 py-3">
+        {r.forma_pagamento ? (
+          <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
+            {r.forma_pagamento}
+          </span>
+        ) : (
+          <span className="text-slate-300">—</span>
         )}
       </td>
 
