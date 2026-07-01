@@ -32,6 +32,16 @@ body {
   @apply antialiased;
   background-color: var(--canvas);
   color: var(--ink);
+  background-attachment: fixed;
+}
+
+/* Profundidade sutil no fundo (toque corporativo) */
+[data-tema='escuro'] body {
+  background-image: radial-gradient(1000px 520px at 12% -8%, rgba(99, 102, 241, 0.14), transparent 55%),
+    radial-gradient(900px 500px at 100% 0%, rgba(56, 189, 248, 0.06), transparent 50%);
+}
+[data-tema='medio'] body {
+  background-image: radial-gradient(1000px 520px at 12% -8%, rgba(255, 255, 255, 0.06), transparent 55%);
 }
 
 /* Títulos/seções que ficam sobre o canvas — acompanham o tema. */
@@ -70,6 +80,21 @@ textarea {
 input::placeholder,
 textarea::placeholder {
   color: #94a3b8;
+}
+
+/* Card clicável: hover corporativo (leve elevação + realce da marca) + feedback ao clicar */
+.card-hover {
+  transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+  will-change: transform;
+}
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 26px -10px rgba(15, 23, 42, 0.28);
+  border-color: rgba(99, 102, 241, 0.5);
+}
+.card-hover:active {
+  transform: translateY(0) scale(0.994);
+  box-shadow: 0 4px 10px -4px rgba(15, 23, 42, 0.18);
 }
 
 /* Esconde a barra de rolagem horizontal feia em tabelas no mobile, mantendo o scroll */

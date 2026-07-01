@@ -397,9 +397,9 @@ function PedidoItem({ r, aba, podeEditar, onClick, onStatus }) {
       onClick={podeEditar ? onClick : undefined}
       role={podeEditar ? 'button' : undefined}
       className={[
-        'block w-full rounded-xl border border-slate-200 bg-white p-4 text-left shadow-sm',
+        'block w-full rounded-xl border border-slate-200/80 bg-white p-4 text-left shadow-sm',
         corBorda,
-        podeEditar ? 'cursor-pointer transition hover:shadow active:scale-[0.99]' : '',
+        podeEditar ? 'card-hover cursor-pointer' : '',
       ].join(' ')}
     >
       {/* Linha 1: produto + valor */}
