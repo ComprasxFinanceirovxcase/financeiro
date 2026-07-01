@@ -34,8 +34,7 @@ body {
   color: var(--ink);
 }
 
-/* Títulos/seções ficam sobre o canvas — acompanham o tema.
-   (Os cards usam <p>, então não são afetados.) */
+/* Títulos/seções que ficam sobre o canvas — acompanham o tema. */
 [data-tema] h1,
 [data-tema] h2,
 [data-tema] h3 {
@@ -45,6 +44,32 @@ body {
 /* Texto secundário direto no canvas (subtítulos) */
 .txt-canvas-muted {
   color: var(--ink-muted) !important;
+}
+
+/* ===== Superfícies claras sempre legíveis =====
+   Cards, modais e tabelas usam fundo branco em TODOS os temas, então o
+   texto dentro deles deve continuar escuro (e não herdar a cor clara do
+   tema, que só vale para o canvas). */
+[data-tema='medio'] .bg-white,
+[data-tema='escuro'] .bg-white,
+[data-tema='medio'] .bg-white h1,
+[data-tema='medio'] .bg-white h2,
+[data-tema='medio'] .bg-white h3,
+[data-tema='escuro'] .bg-white h1,
+[data-tema='escuro'] .bg-white h2,
+[data-tema='escuro'] .bg-white h3 {
+  color: #1e293b;
+}
+
+/* Campos de formulário ficam sobre fundo claro → texto sempre escuro */
+input,
+select,
+textarea {
+  color: #1e293b;
+}
+input::placeholder,
+textarea::placeholder {
+  color: #94a3b8;
 }
 
 /* Esconde a barra de rolagem horizontal feia em tabelas no mobile, mantendo o scroll */
